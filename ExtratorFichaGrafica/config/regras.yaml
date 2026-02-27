@@ -1,0 +1,24 @@
+historico_debito:
+  - JUROS
+  - IOF
+  - TARIFA
+  - SEGURO
+  - MULTA
+  - ENCARGO
+  - MORA
+  - DESPESA
+  - COMISSAO
+  - ADVALOREM
+  - HORARIO
+  - CUSTA
+  - LIBERACAO
+
+historico_credito:
+  - AMORTIZACAO
+  - PAGAMENTO
+  - LIQUIDACAO
+  - ESTORNO
+  - DEVOLUCAO
+  - ABATIMENTO
+  - CREDITO
+  - BONIFICACAO
