@@ -5,3 +5,5 @@ venv/
 build/
 dist/
 *.log
+ExtratorFichaGrafica/
+dist/

@@ -45,58 +45,105 @@ def processar_pasta(pasta: Path, out_root: Path):
     # bibliotecas
     import pandas as pd
     from extrator.logging_utils import setup_logger
-    from extrator.io_utils import salvar_resultados
+    #from extrator.io_utils import salvar_resultados
     from extrator.ficha_grafica import extrair_ficha_grafica_pdf  # sua função atual
-    from extrator.fallback_xlsx import tentar_manual_por_pdfstem, ler_ficha_grafica_manual_xlsx
+    from extrator.fallback_xlsx import ler_ficha_grafica_manual_xlsx
+    from extrator.validation import validar_df_simples
 
     out_dir = out_root
     (out_dir / "logs").mkdir(parents=True, exist_ok=True)
     logger = setup_logger(out_dir / "logs")
 
     logger.info(f"Iniciando processamento da pasta: {pasta}")
-    pdfs = sorted([p for p in pasta.glob("*.pdf")])
-    if not pdfs:
-        raise RuntimeError("Nenhum PDF com 'Ficha Grafica' no nome foi encontrado na pasta.")
+    pdfs = {p.stem: p for p in pasta.glob("*.pdf")}
+    xlsx_in = {p.stem: p for p in pasta.glob("*.xlsx")}
 
-    dfs = []
+    # pega XLSX já existentes na pasta de saída (corrigidos)
+    xlsx_out = {p.stem: p for p in out_dir.glob("*.xlsx")}
+
+    # universo de itens por stem
+    stems = sorted(set(pdfs.keys()) | set(xlsx_in.keys()) | set(xlsx_out.keys()))
+    if not stems:
+        raise RuntimeError("Nenhum PDF ou XLSX encontrado na pasta de entrada ou saída")
+
+    status_rows = []
+    dfs_consolidados = []
     erros = []
 
-    for pdf in pdfs:
+    for stem in stems:
         try:
-            logger.info(f"Processando: {pdf.name}")
-            df = extrair_ficha_grafica_pdf(str(pdf))
-            # salva 1 EXCEL por PDF
-            out_xlsx = out_dir / f"{pdf.stem}.xlsx"
-            df.to_excel(out_xlsx, index=False)
-            logger.info(f"Planilha gerada: {out_xlsx.name}")
-            
-            # Concatenando dados
-            dfs.append(df)
+            # prioridade: XLSX da saída (corrigido) > XLSX da entrada (manual) > PDF 
+            xlsx_path = xlsx_out.get(stem) or xlsx_in.get(stem)
+            pdf_path = pdfs.get(stem)
+
+            if xlsx_path:
+                logger.info(f"[XLSX] {stem} -> {xlsx_path.name}")
+                df = ler_ficha_grafica_manual_xlsx(xlsx_path, arquivo_origem=pdf_path.name if pdf_path else stem)
+                fonte = "XLSX"
+            elif pdf_path:
+                logger.info(f"[PDF] {stem} -> {pdf_path.name}")
+                df = extrair_ficha_grafica_pdf(str(pdf_path))
+                fonte = "PDF"
+
+                # salva o XLSX gerado pelo extrator na pasta de saída (mesmo stem)
+                out_xlsx = out_dir / f"{stem}.xlsx"
+                df.to_excel(out_xlsx, index=False)
+                logger.info(f"Gerado: {out_xlsx.name}")
+            else:
+                # sem xlsx e sem pdf: não tem o que fazer
+                status_rows.append({
+                    "stem": stem,
+                    "status": "FALHA",
+                    "fonte": "NENHUMA",
+                    "motivos": "Sem PDF e sem XLSX"
+                })
+                continue
+
+            # valida
+            status, motivos = validar_df_simples(df)
+            # consolida
+            df2 = df.copy()
+            df2["Stem"] = stem
+            df2["Fonte"] = fonte
+            df2["Status"] = status
+            dfs_consolidados.append(df2)
+
+            status_rows.append({
+                "stem": stem,
+                "status": status,
+                "fonte": fonte,
+                "motivos": " | ".join(motivos) if motivos else ""
+            })
+
+            # se veio do PDF e está REVISAR, o XLSX já foi salvo e a equipe corrige nele
+            # se veio do XLSX e está REVISAR, a equipe já sabe que precisa revisar o manual/corrigido
+    
         except Exception as e:
-            logger.exception(f"Erro em {pdf.name}: {e}")
-            erros.append({"arquivo": pdf.name, "erro": str(e)})
+            logger.exception(f"Erro em {stem}: {e}")
+            erros.append({"stem": stem, "erro": str(e)})
+            status_rows.append({"stem": stem, "status": "ERRO", "fonte": "", "motivos": str(e)})
 
-    df_all = pd.concat(dfs, ignore_index=True) if dfs else pd.DataFrame()
+    # salva status.csv
+    df_status = pd.DataFrame(status_rows).sort_values(["status", "stem"])
+    df_status.to_csv(out_dir / "status.csv", index=False, sep=";", encoding="utf-8-sig")
 
-    # Alertas úteis para equipe (ajuste como quiser)
-    alertas = pd.DataFrame()
-    if not df_all.empty:
-        alertas = df_all[df_all["Tipo"].isin(["INDEFINIDO"])].copy()
+    # salva consolidado
+    df_all = pd.concat(dfs_consolidados, ignore_index=True) if dfs_consolidados else pd.DataFrame()
+    df_all.to_excel(out_dir / "consolidado.xlsx", index=False)
 
-    resumo = {
-        "pasta_entrada": str(pasta),
-        "total_pdfs": len(pdfs),
-        "pdfs_ok": len(dfs),
-        "pdfs_erro": len(erros),
-        "linhas_total": int(len(df_all)) if not df_all.empty else 0,
-        "linhas_indefinidas": int(len(alertas)) if not alertas.empty else 0,
-    }
+    # salva erros.csv
+    if erros:
+        pd.DataFrame(erros).to_csv(out_dir / "logs" / "erros.csv", index=False, sep=";", encoding="utf-8-sig")
 
-    salvar_resultados(out_dir, erros, alertas, resumo)
-    logger.info(f"Concluído. Saída em: {out_dir}")
-    return out_dir
+    logger.info("Concluído.")
+    return out_dir, df_all, df_status
+
 
 def main():
+    #import pericia.ui as ui
+    #import pericia.calculations as cal
+    #import pericia.process as process_df
+    from extrator.validation import rodar_validacoes
     root = tk.Tk()
     root.withdraw()
 
@@ -111,12 +158,12 @@ def main():
         return
 
     try:
-        out_dir = processar_pasta(Path(pasta), Path(out_root))
+        out_dir, df,_ = processar_pasta(Path(pasta), Path(out_root))
+        df_val = rodar_validacoes(df)
+        df_val.to_csv(out_dir / "validacao.csv", index=False, sep=";", encoding="utf-8-sig")
         messagebox.showinfo("Concluído", f"Processamento finalizado!\n\nSaída:\n{out_dir}")
     except Exception as e:
         messagebox.showerror("Erro", str(e))
-
     
-
 if __name__ == "__main__":
     main()

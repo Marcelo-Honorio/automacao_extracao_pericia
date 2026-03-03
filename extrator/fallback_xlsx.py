@@ -200,7 +200,6 @@ def ler_ficha_grafica_manual_xlsx(
 
     return out
 
-
 def tentar_manual_por_pdfstem(manual_dir: str | Path, pdf_path: str | Path) -> Path | None:
     """
     Procura um XLSX manual com o mesmo stem do PDF:

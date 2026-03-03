@@ -1,12 +1,7 @@
-import time
 import pandas as pd
-import os, sys
-
-#Adicionou mais um caminho (a pasta src/app) para o Python procurar módulos
-sys.path.append(os.path.join(os.getcwd(), "src", "app"))
-import ui
-import calculations as cal
-import planilhamento as plt
+import os
+import pericia.ui as ui
+import pericia.calculations as cal
 
 def read_table_from_file(file_path):
     try:
@@ -19,25 +14,12 @@ def read_table_from_file(file_path):
     except Exception as e:
         print(f"Erro ao ler o arquivo {file_path}: {e}")
 
-def process_file(file_path):
-    max_retries = 3  # Número de tentativas
-    retry_delay = 5  # Intervalo entre tentativas em segundos
-    print(f"Processando arquivo: {file_path}")
 
-    df = plt.extrair_ficha_grafica_pdf(file_path)
-    
-    for attempt in range(max_retries):
-       try:
-           df = read_table_from_file(file_path)
-           print("arquivo lido")
-           break # Sai do loop de tentativas se bem-sucedido
-       except PermissionError:
-           print(f"Permissão negada (tentativa {attempt + 1}/{max_retries}). Tentando novamente em {retry_delay} segundos...")
-           time.sleep(retry_delay)
-       except Exception as e:
-           print(f"Erro ao processar arquivo {file_path}: {e}")
-           break  # Sai do loop de tentativas em caso de outros erros
-    
+def process_df(df):
+    #print(f"Processando arquivo:{}")
+
+    df = df[["Data", "Historico", "Debito", "Credito", "Saldo"]]
+  
     if df is not None:
         #renomear colunas
         df.columns = ['data', 'historico', 'debito', 'credito', 'saldo']

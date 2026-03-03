@@ -2,3 +2,9 @@ pandas
 openpyxl
 pyPDF2
 pyyaml
+pdfplumber==0.10.1
+PySimpleGui
+watchdog
+pytesseract
+pillow
+PyPDF2

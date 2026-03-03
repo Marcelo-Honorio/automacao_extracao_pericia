@@ -1,5 +1,24 @@
 import pandas as pd
 
+def validar_df_simples(df):
+    """
+    Retorna: (status, motivos)
+    status: OK | REVISAR | FALHA
+    """
+    if df is None or df.empty:
+        return "FALHA", ["DF vazio"]
+    if len(df) < 3:
+        return "FALHA", [f"Poucas linhas: {len(df)}"]
+
+    motivos = []
+    if "Tipo" in df.columns:
+        indef = int((df["Tipo"] == "INDEFINIDO").sum())
+        if indef > 0:
+            motivos.append(f"INDEFINIDO={indef}")
+            return "REVISAR", motivos
+
+    return "OK", motivos
+
 
 def validar_datas_ordenadas(df: pd.DataFrame):
     """
