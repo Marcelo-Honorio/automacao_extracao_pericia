@@ -3,34 +3,6 @@ from pathlib import Path
 import tkinter as tk
 from tkinter import filedialog, messagebox
 
-def validar_df_basico(df):
-    """
-    Validação simples e genérica:
-      - OK: sem indefinidos
-      - REVISAR: tem indefinidos, mas tem linhas suficientes
-      - FALHA: vazio ou quase nada útil
-    """
-    if df is None or df.empty:
-        return "FALHA", ["DF vazio"]
-
-    # mínimo de linhas
-    if len(df) < 3:
-        return "FALHA", [f"Poucas linhas: {len(df)}"]
-
-    motivos = []
-
-    if "Tipo" in df.columns:
-        indef = (df["Tipo"] == "INDEFINIDO").sum()
-        if indef > 0:
-            motivos.append(f"Linhas INDEFINIDO: {indef}")
-
-            # regra simples: se mais de 20% indefinido -> REVISAR
-            if indef / max(len(df), 1) >= 0.20:
-                return "REVISAR", motivos
-            return "REVISAR", motivos
-
-    return "OK", motivos
-
 def gerar_template_manual_xlsx(path_out: Path):
     """
     Gera um template simples para preenchimento manual.
@@ -48,7 +20,8 @@ def processar_pasta(pasta: Path, out_root: Path):
     #from extrator.io_utils import salvar_resultados
     from extrator.ficha_grafica import extrair_ficha_grafica_pdf  # sua função atual
     from extrator.fallback_xlsx import ler_ficha_grafica_manual_xlsx
-    from extrator.validation import validar_df_simples
+    from extrator.validation import rodar_validacoes_e_decidir
+    from pericia.process import process_df
 
     out_dir = out_root
     (out_dir / "logs").mkdir(parents=True, exist_ok=True)
@@ -99,20 +72,47 @@ def processar_pasta(pasta: Path, out_root: Path):
                 })
                 continue
 
-            # valida
-            status, motivos = validar_df_simples(df)
+            # rodas e salva relatório de validação
+            df_alertas, decisao = rodar_validacoes_e_decidir(df)
+            out_csv = out_dir / f"{stem}(VALIDACAO).csv"
+            df_alertas.to_csv(out_csv, index=False, sep=";", encoding="utf-8-sig")
+
+            # bloqueia cálculo se necessário
+            if not decisao["pode_calcular"]:
+                messagebox.showerror(
+                    "Validação bloqueou o cálculo",
+                    f"Não foi possível continuar.\n\n"
+                    f"Motivo: {decisao['motivo']}\n\n"
+                    "Corrija o XLSX e rode novamente."
+                )
+                return
+
+            # alerta mas permite continuar
+            if decisao["status"] == "ALERTA":
+                messagebox.showwarning(
+                    "Aviso de Validação",
+                    f"Foram encontrados alertas:\n\n{decisao['motivo']}\n\n"
+                    "O cálculo continuará."
+                )
+
+            # =============================
+            # AQUI entra o cálculo de pericia
+            # =============================
+            df_process = process_df(df)
+            df_process.to_xlsx(out_dir / f"{stem}(PERICIA).xlsx", index=False)
+
             # consolida
             df2 = df.copy()
             df2["Stem"] = stem
             df2["Fonte"] = fonte
-            df2["Status"] = status
+            df2["Status"] = decisao["status"]
             dfs_consolidados.append(df2)
 
             status_rows.append({
                 "stem": stem,
-                "status": status,
+                "status": decisao["status"],
                 "fonte": fonte,
-                "motivos": " | ".join(motivos) if motivos else ""
+                "motivos": " | ".join(decisao["motivo"]) if decisao["motivo"] else ""
             })
 
             # se veio do PDF e está REVISAR, o XLSX já foi salvo e a equipe corrige nele
@@ -143,7 +143,6 @@ def main():
     #import pericia.ui as ui
     #import pericia.calculations as cal
     #import pericia.process as process_df
-    from extrator.validation import rodar_validacoes
     root = tk.Tk()
     root.withdraw()
 
@@ -158,9 +157,7 @@ def main():
         return
 
     try:
-        out_dir, df,_ = processar_pasta(Path(pasta), Path(out_root))
-        df_val = rodar_validacoes(df)
-        df_val.to_csv(out_dir / "validacao.csv", index=False, sep=";", encoding="utf-8-sig")
+        out_dir,_,_ = processar_pasta(Path(pasta), Path(out_root))
         messagebox.showinfo("Concluído", f"Processamento finalizado!\n\nSaída:\n{out_dir}")
     except Exception as e:
         messagebox.showerror("Erro", str(e))

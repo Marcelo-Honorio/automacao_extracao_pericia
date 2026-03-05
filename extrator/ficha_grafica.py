@@ -52,6 +52,10 @@ def _last_numeric(tokens):
             return t
     return None
 
+def eh_transferencia(historico: str) -> bool:
+    h = normalize_text(historico)
+    return any(k in h for k in HIST_TRANSF)
+
 def adicionar_saldo_calculado(df: pd.DataFrame) -> pd.DataFrame:
     """
     Adiciona colunas:
@@ -90,6 +94,7 @@ REGRAS = carregar_regras()
 
 HIST_DEBITO = REGRAS["historico_debito"]
 HIST_CREDITO = REGRAS["historico_credito"]
+HIST_TRANSF = REGRAS["historico_transferencia"]
 
 # Classificação para extratos sem sinal de negativo e positovo nos débitos e créditos
 def classificar_por_historico(historico: str):
@@ -163,7 +168,6 @@ def extrair_ficha_grafica_pdf(path_pdf: str) -> pd.DataFrame:
                 historico = RE_TOK.sub("", resto)
                 historico = re.sub(r"\s+", " ", historico).strip()
                 hist_up = historico.upper()
-
                 mov_idx, mov = _first_numeric(tokens)
                 if mov is None:
                     sem_mov_num += 1
@@ -207,8 +211,10 @@ def extrair_ficha_grafica_pdf(path_pdf: str) -> pd.DataFrame:
                         elif tipo_hist == "CREDITO":
                             debito, credito = "", mov
                             tipo = "CREDITO_HIST"
-                        else:
-                            tipo = "INDEFINIDO"
+                    # PRIORIDADE FINAL: marcar transferências como neutras no Tipo (sem alterar valores)
+                    if eh_transferencia(historico):
+                        tipo = "TRANSFERENCIA"    
+                        
                 # REGRA GENÉRICA DE VIRADA: TRANSF. DE SALDO
                 # Se saldo/saldo geral vierem como "-" (placeholders), vira 0,00.
                 if "TRANSF" in hist_up and "SALDO" in hist_up:

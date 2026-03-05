@@ -1,87 +1,135 @@
 import pandas as pd
 
-def validar_df_simples(df):
-    """
-    Retorna: (status, motivos)
-    status: OK | REVISAR | FALHA
-    """
-    if df is None or df.empty:
-        return "FALHA", ["DF vazio"]
-    if len(df) < 3:
-        return "FALHA", [f"Poucas linhas: {len(df)}"]
 
-    motivos = []
+def validar_df_basico(df: pd.DataFrame):
+    alertas = []
+
+    if df is None or df.empty:
+        alertas.append({
+            "tipo": "DF_VAZIO",
+            "severidade": "BLOQUEIA",
+            "mensagem": "DataFrame vazio."
+        })
+        return alertas
+
+    if len(df) < 3:
+        alertas.append({
+            "tipo": "POUCAS_LINHAS",
+            "severidade": "BLOQUEIA",
+            "mensagem": f"Poucas linhas ({len(df)})."
+        })
+
     if "Tipo" in df.columns:
         indef = int((df["Tipo"] == "INDEFINIDO").sum())
         if indef > 0:
-            motivos.append(f"INDEFINIDO={indef}")
-            return "REVISAR", motivos
+            alertas.append({
+                "tipo": "TIPO_INDEFINIDO",
+                "severidade": "ALERTA",
+                "quantidade": indef,
+                "mensagem": f"{indef} linhas com Tipo=INDEFINIDO."
+            })
 
-    return "OK", motivos
+    return alertas
 
 
 def validar_datas_ordenadas(df: pd.DataFrame):
-    """
-    Verifica se as datas estão em ordem crescente.
-    """
     alertas = []
-
     if "Data" not in df.columns:
         return alertas
 
-    try:
-        df_tmp = df.copy()
-        df_tmp["Data_dt"] = pd.to_datetime(df_tmp["Data"], format="%d.%m.%Y", errors="coerce")
+    df_tmp = df.copy()
+    df_tmp["Data_dt"] = pd.to_datetime(df_tmp["Data"], dayfirst=True, errors="coerce")
 
-        if not df_tmp["Data_dt"].is_monotonic_increasing:
-            alertas.append({
-                "tipo": "DATA_FORA_DE_ORDEM",
-                "mensagem": "Existem datas fora de ordem cronológica."
-            })
-
-    except Exception:
+    if df_tmp["Data_dt"].isna().all():
         alertas.append({
-            "tipo": "ERRO_DATA",
-            "mensagem": "Erro ao validar datas."
+            "tipo": "DATA_INVALIDA",
+            "severidade": "BLOQUEIA",
+            "mensagem": "Nenhuma data pôde ser convertida."
         })
-
-    return alertas
-
-
-def validar_saldo_vs_calculado(df: pd.DataFrame, tolerancia=0.01):
-    """
-    Compara Saldo_num (PDF) com Saldo_calc (recalculado).
-    """
-    alertas = []
-
-    if "Saldo_num" not in df.columns or "Saldo_calc" not in df.columns:
         return alertas
 
-    divergentes = df[
-        (df["Saldo_num"].notna()) &
-        (df["Saldo_calc"].notna()) &
-        ((df["Saldo_num"] - df["Saldo_calc"]).abs() > tolerancia)
-    ]
-
-    for idx, row in divergentes.iterrows():
+    if not df_tmp["Data_dt"].is_monotonic_increasing:
         alertas.append({
-            "tipo": "DIVERGENCIA_SALDO",
-            "linha": int(idx),
-            "data": row.get("Data"),
-            "saldo_pdf": row.get("Saldo_num"),
-            "saldo_calc": row.get("Saldo_calc")
+            "tipo": "DATA_FORA_DE_ORDEM",
+            "severidade": "ALERTA",
+            "mensagem": "Existem datas fora de ordem cronológica."
         })
 
     return alertas
 
 
-def rodar_validacoes(df: pd.DataFrame):
+def validar_saldo_vs_calculado(df: pd.DataFrame, tolerancia=0.01, limite_pct_div=0.10):
     """
-    Executa todas as validações e retorna DataFrame de alertas.
+    Compara Saldo (PDF) com Saldo_calculado.
+    - ALERTA se divergência em poucas linhas
+    - BLOQUEIA se divergência em muitas linhas (>= limite_pct_div)
     """
-    todas = []
-    todas.extend(validar_datas_ordenadas(df))
-    todas.extend(validar_saldo_vs_calculado(df))
+    alertas = []
+    if "Saldo" not in df.columns or "Saldo_calculado" not in df.columns:
+        return alertas
 
-    return pd.DataFrame(todas)
+    df_tmp = df.copy()
 
+    # garante numérico
+    df_tmp["Saldo"] = pd.to_numeric(df_tmp["Saldo"], errors="coerce")
+    df_tmp["Saldo_calculado"] = pd.to_numeric(df_tmp["Saldo_calculado"], errors="coerce")
+
+    comp = df_tmp.dropna(subset=["Saldo", "Saldo_calculado"])
+    if comp.empty:
+        return alertas
+
+    diverg = comp[(comp["Saldo"] - comp["Saldo_calculado"]).abs() > tolerancia]
+    qtd = int(len(diverg))
+    pct = qtd / max(len(comp), 1)
+
+    if qtd == 0:
+        return alertas
+
+    sever = "BLOQUEIA" if pct >= limite_pct_div else "ALERTA"
+    alertas.append({
+        "tipo": "DIVERGENCIA_SALDO",
+        "severidade": sever,
+        "quantidade": qtd,
+        "percentual": round(pct, 4),
+        "mensagem": f"Divergência de saldo em {qtd} linhas ({pct:.1%})."
+    })
+
+    return alertas
+
+def rodar_validacoes_e_decidir(df: pd.DataFrame):
+    """
+    Retorna:
+      df_alertas: DataFrame com alertas
+      decisao: dict com status e pode_calcular
+    Regras:
+      - se houver qualquer alerta severidade=BLOQUEIA -> BLOQUEADO (não calcula)
+      - senão, se houver ALERTA -> ALERTA (pode calcular, mas com aviso)
+      - senão -> OK (pode calcular)
+    """
+    alertas = []
+    alertas.extend(validar_df_basico(df))
+    alertas.extend(validar_datas_ordenadas(df))
+    alertas.extend(validar_saldo_vs_calculado(df))
+
+    df_alertas = pd.DataFrame(alertas)
+
+    if df_alertas.empty:
+        return df_alertas, {"status": "OK", "pode_calcular": True, "motivo": ""}
+
+    # normaliza
+    sev = set(df_alertas.get("severidade", pd.Series(dtype=str)).fillna("").astype(str).str.upper())
+
+    if "BLOQUEIA" in sev:
+        motivos = df_alertas[df_alertas["severidade"].str.upper() == "BLOQUEIA"]["tipo"].tolist()
+        return df_alertas, {
+            "status": "BLOQUEADO",
+            "pode_calcular": False,
+            "motivo": " | ".join(motivos)
+        }
+
+    # se não bloqueou mas tem alertas
+    return df_alertas, {
+        "status": "ALERTA",
+        "pode_calcular": True,
+        "motivo": " | ".join(df_alertas["tipo"].astype(str).tolist())
+    }

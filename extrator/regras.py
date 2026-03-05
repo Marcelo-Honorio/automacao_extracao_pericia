@@ -9,6 +9,7 @@ except ImportError:
 DEFAULT = {
     "historico_debito": ["JUROS", "IOF", "TARIFA", "SEGURO", "MULTA", "ENCARGO"],
     "historico_credito": ["AMORTIZACAO", "PAGAMENTO", "LIQUIDACAO", "ESTORNO", "DEVOLUCAO"],
+    "historico_transferencia": ["TRANSF", "TRANSFERENCIA"],
 }
 # diretorio base do projeto
 def get_base_dir():

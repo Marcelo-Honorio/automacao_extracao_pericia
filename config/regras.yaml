@@ -22,3 +22,11 @@ historico_credito:
   - ABATIMENTO
   - CREDITO
   - BONIFICACAO
+
+historico_transferencia:
+  - TRANSF
+  - TRANSFERENCIA
+  - TRANSF. DE SALDO
+  - TRANSF DE SALDO
+  - TRANSF. DE JUROS
+  - TRANSF DE JUROS

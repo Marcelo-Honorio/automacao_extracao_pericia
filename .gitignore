@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+
+# env
+.env
+venv/
+
+# builds
+build/
+dist/
+
+# binários
+*.exe
+*.dll
+
+# logs
+*.log
