@@ -98,7 +98,7 @@ def processar_pasta(pasta: Path, out_root: Path):
             # =============================
             # AQUI entra o cálculo de pericia
             # =============================
-            df_process = process_df(df)
+            df_process = process_df(df, out_dir, stem)
             df_process.to_xlsx(out_dir / f"{stem}(PERICIA).xlsx", index=False)
 
             # consolida

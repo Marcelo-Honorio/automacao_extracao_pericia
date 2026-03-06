@@ -15,7 +15,7 @@ def dias_acum(df):
     valor = 0
     resultado = []
     for i in df.index:
-        if df['historico'][i]=="juros_encarg_add": 
+        if df["Historico"][i]=="juros_encarg_add": 
             valor = df['dias'][i]
             resultado.append(valor)
         else:
@@ -35,7 +35,7 @@ def basecalculo_ano(vetor):
 
 # SN*D depois de calcular os dias
 def SN_D(df):
-    resultado = df.apply(lambda row: row['saldo']*row['dias'] if row['saldo'] < 0 else 0, axis=1)
+    resultado = df.apply(lambda row: row["Saldo"]*row['dias'] if row["Saldo"] < 0 else 0, axis=1)
     resultado.fillna(0.00)
     return resultado
 
@@ -66,7 +66,7 @@ def SNA(df):
     valor = 0
     resultado = []
     for i in df.index:
-        if df['historico'][i]=="juros_encarg_add": 
+        if df["Historico"][i]=="juros_encarg_add": 
             valor = df['snd'][i]
             resultado.append(valor)
         else:
@@ -80,15 +80,15 @@ def SNM(df, periodo):
     valor = 0
     resultado = [0]
     for i in df[1:].index:
-        match df['historico'][i]:
+        match df["Historico"][i]:
             case "juros_encarg_add":
                 valor = abs(df['sna'][i-1]/df['dias_acum'][i-1])
             case "correcao_enc": #não está na lista de classificacao
-                valor = abs(df['saldo'][i-1]) 
+                valor = abs(df["Saldo"][i-1]) 
             case "multa":
-                valor = abs(df['saldo'][i-1]) 
+                valor = abs(df["Saldo"][i-1]) 
             case "juros_mora" if periodo=='mensal':
-                valor = abs(df['saldo'][i-1])
+                valor = abs(df["Saldo"][i-1])
             case "juros_mora" if periodo=='Cobrança única':
                 valor = 0 #cobranca_unica ## REVER ESSA CONDICAO
             case _:
@@ -99,17 +99,17 @@ def SNM(df, periodo):
 ## Calcular os juros
 def juros(df):
     x = ["juros_encarg_add", "correcao_enc", "multa", "juros_mora"]
-    resultado = df.apply(lambda row: row['debito'] if (row['historico'] in x) else 0, axis=1)
+    resultado = df.apply(lambda row: row["Debito"] if (row["Historico"] in x) else 0, axis=1)
     return resultado
 
 ## Calcular a taxa anual banco
 def tx_anual(df, tx_equivalente):
-    trans_saldo = df[df['historico'] == 'trans_saldo'].loc[:,'credito'].head(1)
-    dia_saldo = df[df['historico'] == 'trans_saldo'].loc[:,'data'].head(1)
+    trans_saldo = df[df["Historico"] == 'trans_saldo'].loc[:,"Credito"].head(1)
+    dia_saldo = df[df["Historico"] == 'trans_saldo'].loc[:,"Data"].head(1)
     valor = 0
     resultado = [0]
     for i in df[1:].index:
-        match df['historico'][i]:
+        match df["Historico"][i]:
             case 'juros_encarg_add':
                 valor = ((1+df['juros'][i]/df['snm'][i])**(df['basecalculo_ano'][i]/df['dias_acum'][i]))-1
             case 'multa':
@@ -130,7 +130,7 @@ def tx_mensal(df, tx_equivalente):
     valor = 0
     resultado = [0]
     for i in df[1:].index:
-        match df['historico'][i]:
+        match df["Historico"][i]:
             case 'juros_encarg_add' if tx_equivalente == 'base30':
                 if i != df.shape[0] - 1:
                     valor = ((1+df['juros'][i]/df['snm'][i])**(30/df['dias_acum'][i-1]))-1
@@ -161,16 +161,16 @@ def estorno_credito(df, estornos):
     x = [mapa_estorno.get(i) for i in estornos]
     x.append("juros_encarg_add")
 
-    resultado = df.apply(lambda row: row['debito'] if (row['historico'] in x) else 0, axis=1)
+    resultado = df.apply(lambda row: row["Debito"] if (row["Historico"] in x) else 0, axis=1)
     return resultado
 
 # Função para recalcular o saldo final, snd, sna, snm, juros_recal, juros_acumulado
 def saldo_recalculado(df):
     # Trocar os NA po 0 nas colunas de crédito e debito
-    df["credito"] = df["credito"].fillna(0)
-    df["debito"] = df["debito"].fillna(0)
+    df["Credito"] = df["Credito"].fillna(0)
+    df["Debito"] = df["Debito"].fillna(0)
 
-    p = df[df.historico == "trans_saldo"].index[0]
+    p = df[df.Historico == "trans_saldo"].index[0]
     valor = 0
     x = 0
     a = 0
@@ -184,7 +184,7 @@ def saldo_recalculado(df):
     ## loop antes do transferencia de saldo
     for i in df[:p-1].index:
         #calculando o novo saldo
-        valor = valor - df["debito"][i] + df["credito"][i] + df['estorno_credito'][i]
+        valor = valor - df["Debito"][i] + df["Credito"][i] + df['estorno_credito'][i]
         saldo.append(valor)
         #novo SND
         if valor < 0:
@@ -193,7 +193,7 @@ def saldo_recalculado(df):
             snd.append(0)
         #novo SNA
         if i > 0:
-            if df['historico'][i]=="juros_encarg_add":
+            if df["Historico"][i]=="juros_encarg_add":
                 x=snd[i]
                 sna.append(x)
             else:
@@ -202,7 +202,7 @@ def saldo_recalculado(df):
         else:
             sna.append(0)
         #novo SNM 
-        if df.historico[i] == "juros_encarg_add":
+        if df.Historico[i] == "juros_encarg_add":
             snm.append(sna[i-1]/df["dias_acum"][i-1])
         else:
             snm.append(0)
@@ -240,7 +240,7 @@ def saldo_recalculado(df):
     #Calcular a ultima linha do juros acumulado
     juros_acumulado.append(juros_acumulado[p-1]+juros_recal[p])
 
-    valor = valor = valor - df["debito"][i] + df["credito"][i] + df['estorno_credito'][i] + juros_acumulado[p]
+    valor = valor = valor - df["Debito"][i] + df["Credito"][i] + df['estorno_credito'][i] + juros_acumulado[p]
     saldo.append(valor)
     #adicionar o ultimo valor em sna e snd
     sna.append(0)
@@ -248,7 +248,7 @@ def saldo_recalculado(df):
 
     #Resultado 
     result = pd.DataFrame({
-        "saldo": saldo,
+        "Saldo": saldo,
         "snd": snd,
         "sna": sna,
         "snm": snm,
@@ -259,10 +259,10 @@ def saldo_recalculado(df):
     return result
 
 def finalizar_saldo(df,
-                    col_saldo="saldo",
-                    marker_col="historico",
+                    col_saldo="Saldo",
+                    marker_col="Historico",
                     marker_value="trans_saldo",
-                    deb="debito", cred="credito", estc="estorno_credito"):
+                    deb="Debito", cred="Credito", estc="estorno_credito"):
     # 1) localizar p (primeira linha com historico == "trans_saldo")
     mask = df[marker_col].eq(marker_value)
     if not mask.any():
