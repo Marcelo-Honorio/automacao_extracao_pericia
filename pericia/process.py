@@ -1,5 +1,5 @@
 import pandas as pd
-import os
+import json
 import pericia.ui as ui
 import pericia.calculations as cal
 
@@ -34,7 +34,7 @@ def process_df(df, out_dir, stem):
        
         # Solicitar entrada manual
         print("input de dados")
-        user_data = ui.create_input_with_options()
+        user_data = ui.create_input_with_options(stem)
                
         ## sequencia deve ser seguida
         df["Historico"] = df.Historico.apply(cal.classificar)
@@ -55,18 +55,12 @@ def process_df(df, out_dir, stem):
 
         df = cal.finalizar_saldo(df)
 
+        #Salvando os parametros
+        with open(out_dir/ 'parametros.txt', 'w') as file:
+            json.dump(user_data, file, indent=4)
+
         #Salvando a ficha processada
         df.to_excel(out_dir/ f"{stem}(PROCESSADO).xlsx", index=False)     
     else:
         print("Nenhuma tabela encontrada")
 
-
-from pathlib import Path
-
-df = pd.read_excel("C:/Users/auxil/Downloads/PDF/03-Ficha Grafica.xlsx")
-
-pasta = "C:/Users/auxil/Downloads/PDF"
-
-process_df(df, Path(pasta), "03-Ficha Grafica" )
-
-df["Data"]

@@ -8,3 +8,6 @@ watchdog
 pytesseract
 pillow
 PyPDF2
+
+docxtpl
+python-docx
