@@ -282,3 +282,31 @@ def finalizar_saldo(df,
     df.loc[df.index[p_pos]:, col_saldo] = inicio + delta.iloc[p_pos:].cumsum()
 
     return df
+
+# recalculo de juros
+def juros_acumulado(df):
+
+    mov = (
+        df["Credito"]
+        + df["estorno_credito"]
+        - df["debito_recal"]
+        - df["Debito"]
+    )
+
+    return mov.cumsum()
+
+# Resultado de estorno
+def estorno_resultado(df, estornos):
+    opcoes_estorno = [
+            ("Seguro Penhor",  "seguro_penhor"),
+            ("Seguro de Vida", "seguro_vida"),
+            ("Seguro Agrícola","seguro_agricola"),
+            ("Juros de Mora",         "juros_mora"),
+            ("Tarifa",         "tarifa"),
+        ]
+    mapa_estorno = dict(opcoes_estorno)
+    x = [mapa_estorno.get(i) for i in estornos]
+    
+    resultado = df[df.Historico.isin(x)].groupby("Historico")["estorno_credito"].sum().to_dict()
+    
+    return resultado
