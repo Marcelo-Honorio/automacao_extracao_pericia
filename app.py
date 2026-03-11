@@ -22,6 +22,7 @@ def processar_pasta(pasta: Path, out_root: Path):
     from extrator.fallback_xlsx import ler_ficha_grafica_manual_xlsx
     from extrator.validation import rodar_validacoes_e_decidir
     from pericia.process import process_df
+    from pericia.oi_utils import salvar_resultados
 
     out_dir = out_root
     (out_dir / "logs").mkdir(parents=True, exist_ok=True)
@@ -42,6 +43,8 @@ def processar_pasta(pasta: Path, out_root: Path):
     status_rows = []
     dfs_consolidados = []
     erros = []
+    parametros_contrato = {}
+    estornos_por_arquivo = {}
 
     for stem in stems:
         try:
@@ -98,11 +101,15 @@ def processar_pasta(pasta: Path, out_root: Path):
             # =============================
             # AQUI entra o cálculo de pericia
             # =============================
-            df_process = process_df(df, out_dir, stem)
-            df_process.to_xlsx(out_dir / f"{stem}(PERICIA).xlsx", index=False)
+            df_process, parametros, estorno_apurado  = process_df(df, stem)
+            salvar_resultados(df_process, parametros, out_dir, stem) #Salvando os resultados da pericia
+
+            # salvar os parametros de todos os contratos
+            parametros_contrato[stem] = parametros
+            estornos_por_arquivo[stem] = estorno_apurado
 
             # consolida
-            df2 = df.copy()
+            df2 = df_process.copy()
             df2["Stem"] = stem
             df2["Fonte"] = fonte
             df2["Status"] = decisao["status"]
@@ -129,20 +136,22 @@ def processar_pasta(pasta: Path, out_root: Path):
 
     # salva consolidado
     df_all = pd.concat(dfs_consolidados, ignore_index=True) if dfs_consolidados else pd.DataFrame()
-    df_all.to_excel(out_dir / "consolidado.xlsx", index=False)
+    # df_all.to_excel(out_dir / "dfs_consolidado.xlsx", index=False)
 
     # salva erros.csv
     if erros:
         pd.DataFrame(erros).to_csv(out_dir / "logs" / "erros.csv", index=False, sep=";", encoding="utf-8-sig")
 
     logger.info("Concluído.")
-    return out_dir, df_all, df_status
+    return out_dir, df_all, parametros_contrato, estornos_por_arquivo
 
 
 def main():
     #import pericia.ui as ui
     #import pericia.calculations as cal
     #import pericia.process as process_df
+    from laudo.builder import transformar_input_para_contexto
+    from laudo.render_docx import gerar_laudo_docx
     root = tk.Tk()
     root.withdraw()
 
@@ -157,11 +166,18 @@ def main():
         return
 
     try:
-        out_dir,_,_ = processar_pasta(Path(pasta), Path(out_root))
+        out_dir, df_all, parametros_contrato, estornos_por_arquivo = processar_pasta(Path(pasta), Path(out_root))
+        df_all.to_excel(out_dir / "dfs_consolidado.xlsx", index=False)
+
+        # Preparar os input do LAUDO
+        contexto = transformar_input_para_contexto(parametros_contrato, estornos_por_arquivo)
+        # Gerar o Laudo
+        template_path = "laudo/templates/laudo_modelo.docx"
+        gerar_laudo_docx(template_path, out_dir, contexto)
+
         messagebox.showinfo("Concluído", f"Processamento finalizado!\n\nSaída:\n{out_dir}")
     except Exception as e:
         messagebox.showerror("Erro", str(e))
     
 if __name__ == "__main__":
     main()
-

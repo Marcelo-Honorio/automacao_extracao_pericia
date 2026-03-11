@@ -1,10 +1,9 @@
-from datetime import datetime
 
 def fmt_moeda(valor):
     if valor is None:
-        return ""
+        return None
     s = f"{valor:,.2f}"
-    return "R$ " + s.replace(",", "X").replace(".", ",").replace("X", ".")
+    return s.replace(",", "X").replace(".", ",").replace("X", ".")
 
 def fmt_percentual(valor):
     if valor is None:
