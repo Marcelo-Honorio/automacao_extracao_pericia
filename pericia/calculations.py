@@ -5,6 +5,7 @@ import calendar
 # função pra calcular dias
 def dias(vetor):
     '''utilizar a coluna data'''
+    # resultado = abs((vetor - vetor.shift(-1)).dt.days)
     resultado = abs((vetor - vetor.shift(-1)).dt.days)
     resultado.fillna(pd.Timedelta(0))
     return resultado
@@ -102,7 +103,7 @@ def juros(df):
     resultado = df.apply(lambda row: row["Debito"] if (row["Historico"] in x) else 0, axis=1)
     return resultado
 
-## Calcular a taxa anual banco
+## Calcular a taxa anual
 def tx_anual(df, tx_equivalente):
     trans_saldo = df[df["Historico"] == 'trans_saldo'].loc[:,"Credito"].head(1)
     dia_saldo = df[df["Historico"] == 'trans_saldo'].loc[:,"Data"].head(1)

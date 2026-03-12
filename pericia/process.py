@@ -25,7 +25,7 @@ def process_df(df, stem):
         df.columns = ["Data", "Historico", "Debito", "Credito", "Saldo"]
 
         # converter a coluna data em datetime
-        df["Data"] = pd.to_datetime(df["Data"], dayfirst=True)
+        df["Data"] = pd.to_datetime(df.loc[:, "Data"], dayfirst=True)
 
         # selecionar as colunas
         df = df.loc[:, ["Data", "Historico", "Debito", "Credito", "Saldo"]]
