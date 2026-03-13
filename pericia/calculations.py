@@ -6,22 +6,22 @@ import calendar
 def dias(vetor):
     '''utilizar a coluna data'''
     # resultado = abs((vetor - vetor.shift(-1)).dt.days)
-    resultado = abs((vetor - vetor.shift(-1)).dt.days)
-    resultado.fillna(pd.Timedelta(0))
+    resultado = abs(vetor - vetor.shift(-1))
+    resultado = resultado.fillna(pd.Timedelta(0))
     return resultado
 
 # funcao parar dias acumulados
 def dias_acum(df):
     '''utilizar depois da função classificar e dias'''
-    valor = 0
+    valor = pd.Timedelta(0)
     resultado = []
     for i in df.index:
-        if df["Historico"][i]=="juros_encarg_add": 
-            valor = df['dias'][i]
-            resultado.append(valor)
+        if df.loc[i, "Historico"] == "juros_encarg_add": 
+            valor = df.loc[i, 'dias']
         else:
-            valor = df['dias'][i] + valor
-            resultado.append(valor)
+            valor = valor + df.loc[i, 'dias']
+
+        resultado.append(valor)
     return resultado
 
 # função base de calculo mês
@@ -36,9 +36,16 @@ def basecalculo_ano(vetor):
 
 # SN*D depois de calcular os dias
 def SN_D(df):
-    resultado = df.apply(lambda row: row["Saldo"]*row['dias'] if row["Saldo"] < 0 else 0, axis=1)
+    '''resultado = df.apply(lambda row: row["Saldo"]*row['dias'] if row["Saldo"] < 0 else 0, axis=1)
     resultado.fillna(0.00)
-    return resultado
+    return resultado'''
+    dias = df["dias"] / pd.Timedelta(days=1)
+
+    resultado = df["Saldo"].where(df["Saldo"] < 0, 0) * dias
+
+    return resultado.fillna(0)
+
+    
 
 # Classificação do historico
 def classificar(vetor):
@@ -83,13 +90,14 @@ def SNM(df, periodo):
     for i in df[1:].index:
         match df["Historico"][i]:
             case "juros_encarg_add":
-                valor = abs(df['sna'][i-1]/df['dias_acum'][i-1])
+                dias = df.loc[i-1, "dias_acum"] / pd.Timedelta(days=1)
+                valor = abs(df.loc[i-1, "sna"] / dias)
             case "correcao_enc": #não está na lista de classificacao
-                valor = abs(df["Saldo"][i-1]) 
+                valor = abs(df.loc[i-1, "Saldo"])
             case "multa":
-                valor = abs(df["Saldo"][i-1]) 
+                valor = abs(df.loc[i-1, "Saldo"]) 
             case "juros_mora" if periodo=='mensal':
-                valor = abs(df["Saldo"][i-1])
+                valor = abs(df.loc[i-1, "Saldo"])
             case "juros_mora" if periodo=='Cobrança única':
                 valor = 0 #cobranca_unica ## REVER ESSA CONDICAO
             case _:
@@ -105,22 +113,29 @@ def juros(df):
 
 ## Calcular a taxa anual
 def tx_anual(df, tx_equivalente):
-    trans_saldo = df[df["Historico"] == 'trans_saldo'].loc[:,"Credito"].head(1)
-    dia_saldo = df[df["Historico"] == 'trans_saldo'].loc[:,"Data"].head(1)
-    valor = 0
+    trans_saldo = df.loc[df["Historico"] == 'trans_saldo', "Credito"].iloc[0]
+    dia_saldo = df.loc[df["Historico"] == 'trans_saldo', "Data"].iloc[0]
+
     resultado = [0]
     for i in df[1:].index:
-        match df["Historico"][i]:
+        valor = 0
+        match df.loc[i, "Historico"]:
             case 'juros_encarg_add':
-                valor = ((1+df['juros'][i]/df['snm'][i])**(df['basecalculo_ano'][i]/df['dias_acum'][i]))-1
+                if df.loc[i, "snm"] != 0 and df.loc[i, "dias_acum"] != 0:
+                    dias_acum = df.loc[i, "dias_acum"] / pd.Timedelta(days=1)
+                    valor = ((1+df.loc[i, 'juros']/df.loc[i, 'snm'])**(df.loc[i, 'basecalculo_ano']/dias_acum))-1
             case 'multa':
-                valor = df['juros'][i]/df['snm'][i]
-            case 'juros_mora' if tx_equivalente == "diaria": #coloca no input
-                dias = (df['dias'][i] - dia_saldo).dt.days
-                valor = trans_saldo/(dias*df['snm'][i])
-            case 'juros_mora' if tx_equivalente == 'base30':
-                valor = 0
-                #mes #tirar duvida como é feito o mensal
+                if df.loc[i, "snm"] != 0:
+                    valor = df.loc[i, 'juros']/df.loc[i, 'snm']
+            case 'juros_mora':
+                dias = (df.loc[i, "Data"] - dia_saldo).days
+                if tx_equivalente == "diaria":
+                    taxa_dia = df.loc[i, "juros"] / (trans_saldo * dias)
+                    valor = (1 + taxa_dia) ** 365 - 1
+
+                elif tx_equivalente == "base30":
+                    taxa_mes = df.loc[i, "juros"] / (trans_saldo * (dias/df.loc[i, "basecalculo_mes"]))
+                    valor = (1 + taxa_mes) ** 12 - 1 #coloca no input  
             case _:
                 valor = 0
         resultado.append(valor)
@@ -134,12 +149,14 @@ def tx_mensal(df, tx_equivalente):
         match df["Historico"][i]:
             case 'juros_encarg_add' if tx_equivalente == 'base30':
                 if i != df.shape[0] - 1:
-                    valor = ((1+df['juros'][i]/df['snm'][i])**(30/df['dias_acum'][i-1]))-1
+                    dias_acum = df.loc[i-1, "dias_acum"]/pd.Timedelta(days=1)
+                    valor = ((1+df['juros'][i]/df['snm'][i])**(30/dias_acum))-1
                 else:
                     valor = df['juros'][i]/df['snm'][i]
             case 'juros_encarg_add' if tx_equivalente == 'diaria':
                 if i != df.shape[0] - 1:
-                    valor = ((1+df['juros'][i]/df['snm'][i])**(df['basecalculo_ano'][i-1]/df['dias_acum'][i-1]))-1
+                    dias_acum = df.loc[i-1, "dias_acum"]/pd.Timedelta(days=1)
+                    valor = ((1+df['juros'][i]/df['snm'][i])**(df['basecalculo_ano'][i-1]/dias_acum))-1
                 else:
                     valor = df['juros'][i]/df['snm'][i]
             case 'multa':
@@ -189,7 +206,7 @@ def saldo_recalculado(df):
         saldo.append(valor)
         #novo SND
         if valor < 0:
-            snd.append(valor*df["dias"][i])
+            snd.append(valor*(df.loc[i, "dias"]/pd.Timedelta(days=1)))
         else:
             snd.append(0)
         #novo SNA
@@ -204,17 +221,20 @@ def saldo_recalculado(df):
             sna.append(0)
         #novo SNM 
         if df.Historico[i] == "juros_encarg_add":
-            snm.append(sna[i-1]/df["dias_acum"][i-1])
+            dias_acum_=df.loc[i-1, "dias_acum"]/pd.Timedelta(days=1)
+            snm.append(sna[i-1]/dias_acum_)
         else:
             snm.append(0)
         #Função para o novo recalculo do juros 
         def recalculo_juros(indice):
             i=indice
             if df["tx_mensal"][i] <= taxa_mercado:
-                x = (((1+df["tx_mensal"][i])**(df['dias_acum'][i-1]/30))-1)*snm[i]
+                dias_acum_=df.loc[i-1, "dias_acum"]/pd.Timedelta(days=1)
+                x = (((1+df["tx_mensal"][i])**(dias_acum_/30))-1)*snm[i]
                 #juros_recal.append(x)
             else:
-                x = (((1+taxa_mercado)**(df['dias_acum'][i-1]/30))-1)*snm[i]
+                dias_acum_=df.loc[i-1, "dias_acum"]/pd.Timedelta(days=1)
+                x = (((1+taxa_mercado)**(dias_acum_/30))-1)*snm[i]
                 #juros_recal.append(x)
             return x
         #Novo calculo de juros recalculado
@@ -232,7 +252,8 @@ def saldo_recalculado(df):
     
     #Calcular a ultima linha
     p = len(snm)
-    snm.append(sna[p-1]/df["dias_acum"][p-1])
+    dias_acum_=df.loc[p-1, "dias_acum"]/pd.Timedelta(days=1)
+    snm.append(sna[p-1]/dias_acum_)
     #Calcular a ultima linha do juros recalculo
     if snm[p]<0:
         juros_recal.append(recalculo_juros(p))

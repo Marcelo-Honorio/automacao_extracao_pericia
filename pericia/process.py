@@ -25,30 +25,28 @@ def process_df(df, stem):
         df.columns = ["Data", "Historico", "Debito", "Credito", "Saldo"]
 
         # converter a coluna data em datetime
-        df["Data"] = pd.to_datetime(df.loc[:, "Data"], dayfirst=True)
+        df.loc[:, "Data"] = pd.to_datetime(df.loc[:, "Data"], dayfirst=True).dt.date
 
         # selecionar as colunas
         df = df.loc[:, ["Data", "Historico", "Debito", "Credito", "Saldo"]]
         
-        ## Salvar em CSV ou Excel, se necessário
-       
         # Solicitar entrada manual
         print("input de dados")
         parametros = ui.create_input_with_options(stem)
                
         ## sequencia deve ser seguida
-        df["Historico"] = df.Historico.apply(cal.classificar)
-        df['dias']=cal.dias(df["Data"])
-        df['dias_acum']=cal.dias_acum(df)
-        df['basecalculo_mes'] = cal.basecalculo_mes(df["Data"])
-        df['basecalculo_ano'] = cal.basecalculo_ano(df["Data"])
-        df['snd']=cal.SN_D(df)
-        df['sna']=cal.SNA(df)
-        df['snm']=cal.SNM(df, periodo=parametros['periodo'])
-        df['juros']=cal.juros(df)
-        df['tx_anual'] = cal.tx_anual(df, tx_equivalente=parametros['tx_equivalente'])
-        df['tx_mensal'] = cal.tx_mensal(df, tx_equivalente=parametros['tx_equivalente'])
-        df['estorno_credito'] = cal.estorno_credito(df, estornos=parametros['estornos'])
+        df.loc[:, "Historico"] = df.Historico.apply(cal.classificar)
+        df.loc[:, 'dias']=cal.dias(df["Data"])
+        df.loc[:, 'dias_acum']=cal.dias_acum(df)
+        df.loc[:, 'basecalculo_mes'] = cal.basecalculo_mes(df["Data"])
+        df.loc[:, 'basecalculo_ano'] = cal.basecalculo_ano(df["Data"])
+        df.loc[:, 'snd']=cal.SN_D(df)
+        df.loc[:, 'sna']=cal.SNA(df)
+        df.loc[:, 'snm']=cal.SNM(df, periodo=parametros['periodo'])
+        df.loc[:, 'juros']=cal.juros(df)
+        df.loc[:, 'tx_anual'] = cal.tx_anual(df, tx_equivalente=parametros['tx_equivalente'])
+        df.loc[:, 'tx_mensal'] = cal.tx_mensal(df, tx_equivalente=parametros['tx_equivalente'])
+        df.loc[:, 'estorno_credito'] = cal.estorno_credito(df, estornos=parametros['estornos'])
 
         #saldo, snd, sna, snm, juros_recal, juros_acumulado = saldo_recalculado(df)
         df[["Saldo", "snd", "sna", "snm", "juros_recal", "juros_acumulado"]] = cal.saldo_recalculado(df)
@@ -80,3 +78,13 @@ def process_df(df, stem):
     return df, parametros, estorno_apurado
 
 
+# ================================== TESTE =====================================
+
+
+df = pd.read_excel("C:\\Users\\auxil\\Downloads\\PDF\\03- Ficha Gráfica - 1001729-45.2024.8.11.0091 - ARLEY BRUMATI.xlsx")
+
+stem = "03-Grafico"
+
+df_process,_,_ = process_df(df, stem)
+
+df.head()
