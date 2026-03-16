@@ -23,6 +23,7 @@ def processar_pasta(pasta: Path, out_root: Path):
     from extrator.validation import rodar_validacoes_e_decidir
     from pericia.process import process_df
     from pericia.oi_utils import salvar_resultados
+    from laudo.render_xlsx import gerar_relatorio 
 
     out_dir = out_root
     (out_dir / "logs").mkdir(parents=True, exist_ok=True)
@@ -108,6 +109,13 @@ def processar_pasta(pasta: Path, out_root: Path):
             parametros_contrato[stem] = parametros
             estornos_por_arquivo[stem] = estorno_apurado
 
+            # =============================
+            # AQUI os ANEXOS EXCEL
+            # =============================
+            gerar_relatorio(df_process, )
+
+
+
             # consolida
             df2 = df_process.copy()
             df2["Stem"] = stem
@@ -172,8 +180,7 @@ def main():
         # Preparar os input do LAUDO
         contexto = transformar_input_para_contexto(parametros_contrato, estornos_por_arquivo)
         # Gerar o Laudo
-        template_path = "laudo/templates/laudo_modelo.docx"
-        gerar_laudo_docx(template_path, out_dir, contexto)
+        gerar_laudo_docx(out_dir, contexto)
 
         messagebox.showinfo("Concluído", f"Processamento finalizado!\n\nSaída:\n{out_dir}")
     except Exception as e:

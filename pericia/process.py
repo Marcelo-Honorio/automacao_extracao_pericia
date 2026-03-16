@@ -1,5 +1,4 @@
 import pandas as pd
-import json
 import pericia.ui as ui
 import pericia.calculations as cal
 
@@ -54,7 +53,7 @@ def process_df(df, stem):
         # Calcular o debito recalculado e saldo recalculado
         df["debito_recal"] = 0.0
         posicao = df.index[df["juros_acumulado"].last_valid_index()]
-        df.loc[posicao, "bebito_recal"] = df["juros_acumulado"].dropna().iloc[-1]
+        df.loc[posicao, "debito_recal"] = df["juros_acumulado"].dropna().iloc[-1]
         # Coluna de juros recalculado
         df["saldo_recal"] = cal.juros_acumulado(df)
 
@@ -69,6 +68,11 @@ def process_df(df, stem):
 
         parametros.update(df[["Saldo", "saldo_recal"]].iloc[-1].to_dict())
         estorno_apurado = cal.estorno_resultado(df, estornos=parametros['estornos'])
+
+        ## CORRIGINDO OS DIAS
+        df.loc[:, "Data"] = [i.strftime("%d/%m/%Y") for i in df_process["Data"]]
+        df.loc[:, "dias"] =  df["dias"].dt.days.astype("int64")
+        df.loc[:, "dias_acum"] = df["dias_acum"].dt.days.astype("int64")
     else:
         print("Nenhuma tabela encontrada")
 
@@ -78,7 +82,7 @@ def process_df(df, stem):
 # ================================== TESTE =====================================
 
 
-df = pd.read_excel("C:\\Users\marce\\Downloads\\PDF\\03- Ficha Gráfica - 1001729-45.2024.8.11.0091 - ARLEY BRUMATI.xlsx")
+df = pd.read_excel("C:\\Users\\auxil\\Downloads\\PDF\\03- Ficha Gráfica - 1001729-45.2024.8.11.0091 - ARLEY BRUMATI.xlsx")
 
 stem = "03-Grafico"
 
