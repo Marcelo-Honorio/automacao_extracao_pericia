@@ -18,24 +18,21 @@ def read_table_from_file(file_path):
 def process_df(df, stem):
     #print(f"Processando arquivo:{}")
 
-    df = df[["Data", "Historico", "Debito", "Credito", "Saldo"]]
+    df = df[["Data", "Historico", "Debito", "Credito", "Saldo"]].copy()
   
     if df is not None:
         #renomear colunas
         df.columns = ["Data", "Historico", "Debito", "Credito", "Saldo"]
 
         # converter a coluna data em datetime
-        df.loc[:, "Data"] = pd.to_datetime(df.loc[:, "Data"], dayfirst=True).dt.date
+        df.loc[:, "Data"] = pd.to_datetime(df["Data"], dayfirst=True).dt.date
 
-        # selecionar as colunas
-        df = df.loc[:, ["Data", "Historico", "Debito", "Credito", "Saldo"]]
-        
         # Solicitar entrada manual
         print("input de dados")
         parametros = ui.create_input_with_options(stem)
                
         ## sequencia deve ser seguida
-        df.loc[:, "Historico"] = df.Historico.apply(cal.classificar)
+        df.loc[:, "Historico"] = df["Historico"].apply(cal.classificar)
         df.loc[:, 'dias']=cal.dias(df["Data"])
         df.loc[:, 'dias_acum']=cal.dias_acum(df)
         df.loc[:, 'basecalculo_mes'] = cal.basecalculo_mes(df["Data"])
@@ -81,7 +78,7 @@ def process_df(df, stem):
 # ================================== TESTE =====================================
 
 
-df = pd.read_excel("C:\\Users\\auxil\\Downloads\\PDF\\03- Ficha Gráfica - 1001729-45.2024.8.11.0091 - ARLEY BRUMATI.xlsx")
+df = pd.read_excel("C:\\Users\marce\\Downloads\\PDF\\03- Ficha Gráfica - 1001729-45.2024.8.11.0091 - ARLEY BRUMATI.xlsx")
 
 stem = "03-Grafico"
 
