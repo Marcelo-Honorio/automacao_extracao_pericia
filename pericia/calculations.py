@@ -121,7 +121,7 @@ def tx_anual(df, tx_equivalente):
         match df.loc[i, "Historico"]:
             case 'juros_encarg_add':
                 if df.loc[i, "snm"] != 0 and df.loc[i, "dias_acum"] != 0:
-                    dias_acum = df.loc[i, "dias_acum"] / pd.Timedelta(days=1)
+                    dias_acum = df.loc[i-1, "dias_acum"] / pd.Timedelta(days=1)
                     valor = ((1+df.loc[i, 'juros']/df.loc[i, 'snm'])**(df.loc[i, 'basecalculo_ano']/dias_acum))-1
             case 'multa':
                 if df.loc[i, "snm"] != 0:
@@ -155,11 +155,20 @@ def tx_mensal(df, tx_equivalente):
             case 'juros_encarg_add' if tx_equivalente == 'diaria':
                 if i != df.shape[0] - 1:
                     dias_acum = df.loc[i-1, "dias_acum"]/pd.Timedelta(days=1)
-                    valor = ((1+df['juros'][i]/df['snm'][i])**(df['basecalculo_ano'][i-1]/dias_acum))-1
+                    valor = ((1+df['juros'][i]/df['snm'][i])**(df['basecalculo_mes'][i-1]/dias_acum))-1
                 else:
                     valor = df['juros'][i]/df['snm'][i]
             case 'multa':
                 valor = df['juros'][i]/df['snm'][i]
+            case 'juros_mora':
+                ## Parametros para calculo de juros mora
+                data_trans = df[df.Historico=='trans_saldo']["Data"].iloc[1]
+                valor_trans = df[df.Historico=='trans_saldo']["Debito"].iloc[1]
+                data_mora = df.loc[i, "Data"]
+                valor_mora = df.loc[i, "Debito"]
+                dif = (data_mora - data_trans).days
+                ## calculo
+                valor = (valor_mora/(dif*valor_trans)*30)
             case _:
                 valor = 0
         resultado.append(valor)

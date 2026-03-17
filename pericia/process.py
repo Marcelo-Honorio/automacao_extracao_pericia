@@ -82,7 +82,7 @@ def process_df(df, stem):
 # ================================== TESTE =====================================
 
 
-df = pd.read_excel("C:\\Users\\marce\\Downloads\\PDF\\03- Ficha Gráfica - 1001729-45.2024.8.11.0091 - ARLEY BRUMATI.xlsx")
+df = pd.read_excel("C:\\Users\\auxil\\Downloads\\PDF\\03- Ficha Gráfica - 1001729-45.2024.8.11.0091 - ARLEY BRUMATI.xlsx")
 
 stem = "03-Grafico"
 
