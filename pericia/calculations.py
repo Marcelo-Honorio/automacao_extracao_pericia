@@ -40,10 +40,9 @@ def SN_D(df):
     resultado.fillna(0.00)
     return resultado'''
     dias = df["dias"] / pd.Timedelta(days=1)
-
     resultado = df["Saldo"].where(df["Saldo"] < 0, 0) * dias
 
-    return resultado.fillna(0)
+    return resultado.fillna(0.00)
 
     
 
@@ -281,7 +280,7 @@ def saldo_recalculado(df):
     return result
 
 def finalizar_saldo(df,
-                    col_saldo="Saldo",
+                    col_saldo="SALDO",
                     marker_col="Historico",
                     marker_value="trans_saldo",
                     deb="Debito", cred="Credito", estc="estorno_credito"):

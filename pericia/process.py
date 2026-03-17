@@ -45,7 +45,7 @@ def process_df(df, stem):
         df.loc[:, 'estorno_credito'] = cal.estorno_credito(df, estornos=parametros['estornos'])
 
         #saldo, snd, sna, snm, juros_recal, juros_acumulado = saldo_recalculado(df)
-        df[["Saldo", "snd", "sna", "snm", "juros_recal", "juros_acumulado"]] = cal.saldo_recalculado(df)
+        df[["SALDO", "SND", "SNA", "SNM", "juros_recal", "juros_acumulado"]] = cal.saldo_recalculado(df)
 
         # Juros recalculado
         df = cal.finalizar_saldo(df)
@@ -66,11 +66,11 @@ def process_df(df, stem):
         # Separando substantivos nos parametros
         parametros["substantivo"] = parametros["agente"].split()[1].capitalize()
 
-        parametros.update(df[["Saldo", "saldo_recal"]].iloc[-1].to_dict())
+        parametros.update(df[["SALDO", "saldo_recal"]].iloc[-1].to_dict())
         estorno_apurado = cal.estorno_resultado(df, estornos=parametros['estornos'])
 
         ## CORRIGINDO OS DIAS
-        df.loc[:, "Data"] = [i.strftime("%d/%m/%Y") for i in df_process["Data"]]
+        df.loc[:, "Data"] = [i.strftime("%d/%m/%Y") for i in df["Data"]]
         df.loc[:, "dias"] =  df["dias"].dt.days.astype("int64")
         df.loc[:, "dias_acum"] = df["dias_acum"].dt.days.astype("int64")
     else:
@@ -82,7 +82,7 @@ def process_df(df, stem):
 # ================================== TESTE =====================================
 
 
-df = pd.read_excel("C:\\Users\\auxil\\Downloads\\PDF\\03- Ficha Gráfica - 1001729-45.2024.8.11.0091 - ARLEY BRUMATI.xlsx")
+df = pd.read_excel("C:\\Users\\marce\\Downloads\\PDF\\03- Ficha Gráfica - 1001729-45.2024.8.11.0091 - ARLEY BRUMATI.xlsx")
 
 stem = "03-Grafico"
 
