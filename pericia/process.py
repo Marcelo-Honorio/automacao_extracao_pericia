@@ -71,21 +71,9 @@ def process_df(df, stem):
 
         ## CORRIGINDO OS DIAS
         df.loc[:, "Data"] = [i.strftime("%d/%m/%Y") for i in df["Data"]]
-        df.loc[:, "dias"] =  df["dias"].dt.days.astype("int64")
-        df.loc[:, "dias_acum"] = df["dias_acum"].dt.days.astype("int64")
+        df.loc[:, "dias"] = [i.days for i in df.dias]
+        df.loc[:, "dias_acum"] = [i.days for i in df.dias_acum]
     else:
         print("Nenhuma tabela encontrada")
 
     return df, parametros, estorno_apurado
-
-
-# ================================== TESTE =====================================
-
-
-df = pd.read_excel("C:\\Users\\auxil\\Downloads\\PDF\\03- Ficha Gráfica - 1001729-45.2024.8.11.0091 - ARLEY BRUMATI.xlsx")
-
-stem = "03-Grafico"
-
-df_process,_,_ = process_df(df, stem)
-
-df.head()

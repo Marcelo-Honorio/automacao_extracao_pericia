@@ -6,8 +6,10 @@ import calendar
 def dias(vetor):
     '''utilizar a coluna data'''
     # resultado = abs((vetor - vetor.shift(-1)).dt.days)
-    resultado = abs(vetor - vetor.shift(-1))
-    resultado = resultado.fillna(pd.Timedelta(0))
+    resultado = vetor.shift(-1) - vetor
+    # preencher o ultimo valor
+    i = len(resultado)
+    resultado[i-1] = resultado[i-2] - resultado[i-2]
     return resultado
 
 # funcao parar dias acumulados
@@ -41,10 +43,7 @@ def SN_D(df):
     return resultado'''
     dias = df["dias"] / pd.Timedelta(days=1)
     resultado = df["Saldo"].where(df["Saldo"] < 0, 0) * dias
-
-    return resultado.fillna(0.00)
-
-    
+    return resultado
 
 # Classificação do historico
 def classificar(vetor):
