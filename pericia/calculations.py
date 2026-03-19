@@ -1,6 +1,7 @@
 import pandas as pd
 import re
 import calendar
+from indices.bcb import obter_taxa_por_data
 
 # função pra calcular dias
 def dias(vetor):
@@ -339,3 +340,43 @@ def estorno_resultado(df, estornos):
     resultado = df[df.Historico.isin(x)].groupby("Historico")["estorno_credito"].sum().to_dict()
     
     return resultado
+
+
+## Adicionar Taxa de Mercado
+def taxa_mercado(df: pd.DataFrame, tx_mercado: str, coluna_data: str = "Data") -> list:
+    """
+    Retorna uma lista com a taxa de mercado correspondente a cada data do DataFrame.
+    """
+    SERIES_BCB = {
+        "20726 - PJ Conta garantida": 20726,
+        "20727 - PJ Cheque especial": 20727,
+        "20741 - PF Cheque especial": 20741,
+    }
+
+    df = df.copy()
+
+    if coluna_data not in df.columns:
+        raise ValueError(f"Coluna de data '{coluna_data}' não encontrada no DataFrame.")
+
+    df[coluna_data] = pd.to_datetime(df[coluna_data], errors="coerce")
+
+    if df[coluna_data].isna().any():
+        raise ValueError(f"Existem datas inválidas na coluna '{coluna_data}'.")
+
+    codigo_serie = SERIES_BCB.get(tx_mercado)
+    if codigo_serie is None:
+        return [None for _ in df[coluna_data]]
+
+    cache = {}
+    taxas = []
+
+    for data in df[coluna_data]:
+        chave = data.strftime("%Y-%m-%d")
+
+        if chave not in cache:
+            taxa_info = obter_taxa_por_data(codigo_serie, chave)
+            cache[chave] = taxa_info["valor"] if taxa_info is not None else None
+
+        taxas.append(cache[chave])
+
+    return taxas

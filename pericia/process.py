@@ -40,6 +40,7 @@ def process_df(df, stem):
         df.loc[:, 'sna']=cal.SNA(df)
         df.loc[:, 'snm']=cal.SNM(df, periodo=parametros['periodo'])
         df.loc[:, 'juros']=cal.juros(df)
+        df.loc[:, "tx_mercado"] = cal.taxa_mercado(df, tx_mercado=parametros["tx_mercado"])
         df.loc[:, 'tx_anual'] = cal.tx_anual(df, tx_equivalente=parametros['tx_equivalente'])
         df.loc[:, 'tx_mensal'] = cal.tx_mensal(df, tx_equivalente=parametros['tx_equivalente'])
         df.loc[:, 'estorno_credito'] = cal.estorno_credito(df, estornos=parametros['estornos'])

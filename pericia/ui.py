@@ -14,7 +14,7 @@ def create_input_with_options(steam: str):
             "periodo": periodo_var.get(),
             "estornos": [listbox.get(i) for i in listbox.curselection()],
             "juros": juros_var.get(),
-            "pasta": pasta_var.get(),
+            "tx_mercado": tx_mercado.get(),
             "valor_parcela": valor_parcela.get(),
             "numero_parcela": numero_parcela.get(),
             "tx_equivalente": tx_equivalente_var.get(),
@@ -108,10 +108,11 @@ def create_input_with_options(steam: str):
     finalidade_op_entry.grid(row=11, column=1, pady=2)
 
     # Janela de Nome da pasta
-    ttk.Label(root, text="Nome da pasta:", font=font_style).grid(row=12, column=0, sticky="w")
-    pasta_var = tk.StringVar(value="NovaPasta")
-    pasta_entry = ttk.Entry(root, textvariable=pasta_var, font=font_style)
-    pasta_entry.grid(row=12, column=1, pady=2)
+    ttk.Label(root, text="Taxa de mercado:", font=font_style).grid(row=12, column=0, sticky="w")
+    tx_mercado = tk.StringVar(value="Nenhuma")
+    serie = ["Nenhuma", "20726 - PJ Conta garantida", "20727 - PJ Cheque especial", "20741 - PF Cheque especial"]
+    tx_mercado_var = ttk.Combobox(root,  values=serie, textvariable=tx_mercado, font=font_style)
+    tx_mercado_var.grid(row=12, column=1, pady=2)
     
     # Salvar/Cancelar
     ttk.Button(root, text="Salvar", command=salvar).grid(row=13, column=0, pady=10)
