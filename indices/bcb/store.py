@@ -20,7 +20,7 @@ def carregar_serie_local(codigo: int) -> pd.DataFrame:
     if not path.exists():
         return pd.DataFrame(columns=["data", "valor"])
 
-    df = pd.read_csv(path)
+    df = pd.read_csv(path, sep=";")
     if df.empty:
         return pd.DataFrame(columns=["data", "valor"])
 

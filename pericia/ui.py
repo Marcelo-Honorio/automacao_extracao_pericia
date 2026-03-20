@@ -107,10 +107,10 @@ def create_input_with_options(steam: str):
     finalidade_op_entry = ttk.Entry(root, textvariable=finalidade_op, font=font_style)
     finalidade_op_entry.grid(row=11, column=1, pady=2)
 
-    # Janela de Nome da pasta
+    # Janela de Taxa de mercado
     ttk.Label(root, text="Taxa de mercado:", font=font_style).grid(row=12, column=0, sticky="w")
     tx_mercado = tk.StringVar(value="Nenhuma")
-    serie = ["Nenhuma", "20726 - PJ Conta garantida", "20727 - PJ Cheque especial", "20741 - PF Cheque especial"]
+    serie = ["Nenhuma", "20726 - PJ Conta garantida", "20727 - PJ Cheque especial", "20741 - PF Cheque especial", "TMM - PF Conta garantida"]
     tx_mercado_var = ttk.Combobox(root,  values=serie, textvariable=tx_mercado, font=font_style)
     tx_mercado_var.grid(row=12, column=1, pady=2)
     
