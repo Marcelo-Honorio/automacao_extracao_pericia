@@ -2,8 +2,8 @@ from pathlib import Path
 from docxtpl import DocxTemplate
 
 
-
-def gerar_laudo_docx(template_path, out_dir, contexto):
+# template_path,
+def gerar_laudo_docx(out_dir, contexto):
     """
     Preenche um template .docx com o contexto e salva o arquivo final.
     """

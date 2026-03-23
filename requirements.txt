@@ -11,3 +11,5 @@ PyPDF2
 
 docxtpl
 python-docx
+
+requests

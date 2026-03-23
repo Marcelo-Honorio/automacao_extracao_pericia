@@ -16,6 +16,7 @@ def gerar_template_manual_xlsx(path_out: Path):
 def processar_pasta(pasta: Path, out_root: Path):
     # bibliotecas
     import pandas as pd
+    import json
     from extrator.logging_utils import setup_logger
     #from extrator.io_utils import salvar_resultados
     from extrator.ficha_grafica import extrair_ficha_grafica_pdf  # sua função atual
@@ -77,12 +78,12 @@ def processar_pasta(pasta: Path, out_root: Path):
                 continue
 
             # rodas e salva relatório de validação
-            df_alertas, decisao = rodar_validacoes_e_decidir(df)
-            out_csv = out_dir / f"{stem}(VALIDACAO).csv"
-            df_alertas.to_csv(out_csv, index=False, sep=";", encoding="utf-8-sig")
+            decisao = rodar_validacoes_e_decidir(df)
+            with open(out_dir / "decisao.txt", 'w') as file:
+                json.dump(decisao[1], file, indent=4)
 
             # bloqueia cálculo se necessário
-            if not decisao["pode_calcular"]:
+            if not decisao[1]["pode_calcular"]:
                 messagebox.showerror(
                     "Validação bloqueou o cálculo",
                     f"Não foi possível continuar.\n\n"
@@ -92,7 +93,7 @@ def processar_pasta(pasta: Path, out_root: Path):
                 return
 
             # alerta mas permite continuar
-            if decisao["status"] == "ALERTA":
+            if decisao[1]["status"] == "ALERTA":
                 messagebox.showwarning(
                     "Aviso de Validação",
                     f"Foram encontrados alertas:\n\n{decisao['motivo']}\n\n"
@@ -112,9 +113,7 @@ def processar_pasta(pasta: Path, out_root: Path):
             # =============================
             # AQUI os ANEXOS EXCEL
             # =============================
-            gerar_relatorio(df_process, )
-
-
+            gerar_relatorio(df_process, parametros)
 
             # consolida
             df2 = df_process.copy()
@@ -174,15 +173,16 @@ def main():
         return
 
     try:
-        out_dir, df_all, parametros_contrato, estornos_por_arquivo = processar_pasta(Path(pasta), Path(out_root))
-        df_all.to_excel(out_dir / "dfs_consolidado.xlsx", index=False)
+        df_all, parametros_contrato, estornos_por_arquivo = processar_pasta(Path(pasta), Path(out_root))
+        #df_all.to_excel(out_dir / "dfs_consolidado.xlsx", index=False)
 
         # Preparar os input do LAUDO
         contexto = transformar_input_para_contexto(parametros_contrato, estornos_por_arquivo)
+        
         # Gerar o Laudo
-        gerar_laudo_docx(out_dir, contexto)
+        gerar_laudo_docx(Path(out_root), contexto)
 
-        messagebox.showinfo("Concluído", f"Processamento finalizado!\n\nSaída:\n{out_dir}")
+        messagebox.showinfo("Concluído", f"Processamento finalizado!\n\nSaída:\n{out_root}")
     except Exception as e:
         messagebox.showerror("Erro", str(e))
     

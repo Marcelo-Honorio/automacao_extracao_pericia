@@ -6,7 +6,7 @@ from pathlib import Path
 # CONFIGURAÇÕES
 # =========================
 BASE_DIR = Path(__file__).resolve().parent
-TEMPLATE = BASE_DIR / "templates" / "tamplate_xlsx.xlsx"
+TEMPLATE = BASE_DIR / "templates" / "template_xlsx.xlsx"
 
 SHEET = "ANEXO 2"
 

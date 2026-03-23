@@ -5,7 +5,7 @@ a = Analysis(
     ['app.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[('laudo\\templates\\*.xlsx', 'laudo\\templates'), ('laudo\\templates\\*.docx', 'laudo\\templates'), ('indices\\dados\\bcb\\*.csv', 'indices\\dados\\bcb')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
