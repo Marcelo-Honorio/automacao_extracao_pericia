@@ -9,6 +9,14 @@ from .store import (
 )
 from .config import SERIES
 
+TX_MERCADO_SERIES = {
+    "20726 - PJ Conta garantida": [20726],
+    "20727 - PJ Cheque especial": [20727],
+    "20741 - PF Cheque especial": [20741],
+    "TMM - PF Conta garantida": [20727, 20741, 20726],
+}
+
+_SERIES_ATUALIZADAS = set()
 
 def inicializar_serie(codigo: int) -> pd.DataFrame:
     """
@@ -21,10 +29,9 @@ def inicializar_serie(codigo: int) -> pd.DataFrame:
     salvar_serie_local(codigo, df)
     return df
 
-
 def atualizar_serie(codigo: int) -> pd.DataFrame:
     """
-    Atualiza somente os meses novos da série.
+    Atualiza somente os registros novos da série a partir da última data local.
     """
     if not existe_serie(codigo):
         return inicializar_serie(codigo)
@@ -39,11 +46,17 @@ def atualizar_serie(codigo: int) -> pd.DataFrame:
     ultima = ultima_data_local(codigo)
     hoje = pd.Timestamp.today().normalize()
 
+    if ultima >= hoje:
+        return local
+
     faltante = baixar_periodo(
         codigo=codigo,
-        data_inicial=ultima.strftime("%Y-%m-%d"),
+        data_inicial=(ultima + pd.Timedelta(days=1)).strftime("%Y-%m-%d"),
         data_final=hoje.strftime("%Y-%m-%d"),
     )
+
+    if faltante.empty:
+        return local
 
     atualizado = (
         pd.concat([local, faltante], ignore_index=True)
@@ -55,13 +68,28 @@ def atualizar_serie(codigo: int) -> pd.DataFrame:
     salvar_serie_local(codigo, atualizado)
     return atualizado
 
+def atualizar_series_por_tx_mercado(tx_mercado: str) -> None:
+    """
+    Atualiza apenas as séries necessárias para a taxa escolhida.
+    Evita atualizar a mesma série mais de uma vez na mesma execução.
+    """
+    if not tx_mercado:
+        return
+
+    codigos = TX_MERCADO_SERIES.get(tx_mercado, [])
+
+    for codigo in codigos:
+        if codigo in _SERIES_ATUALIZADAS:
+            continue
+
+        atualizar_serie(codigo)
+        _SERIES_ATUALIZADAS.add(codigo)
 
 def inicializar_todas_series() -> dict[int, pd.DataFrame]:
     resultado = {}
     for codigo in SERIES:
         resultado[codigo] = inicializar_serie(codigo)
     return resultado
-
 
 def atualizar_todas_series() -> dict[int, pd.DataFrame]:
     resultado = {}
