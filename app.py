@@ -87,7 +87,7 @@ def processar_pasta(pasta: Path, out_root: Path):
                 messagebox.showerror(
                     "Validação bloqueou o cálculo",
                     f"Não foi possível continuar.\n\n"
-                    f"Motivo: {decisao['motivo']}\n\n"
+                    f"Motivo: {decisao[1]['motivo']}\n\n"
                     "Corrija o XLSX e rode novamente."
                 )
                 return
@@ -96,7 +96,7 @@ def processar_pasta(pasta: Path, out_root: Path):
             if decisao[1]["status"] == "ALERTA":
                 messagebox.showwarning(
                     "Aviso de Validação",
-                    f"Foram encontrados alertas:\n\n{decisao['motivo']}\n\n"
+                    f"Foram encontrados alertas:\n\n{decisao[1]['motivo']}\n\n"
                     "O cálculo continuará."
                 )
 
@@ -119,14 +119,14 @@ def processar_pasta(pasta: Path, out_root: Path):
             df2 = df_process.copy()
             df2["Stem"] = stem
             df2["Fonte"] = fonte
-            df2["Status"] = decisao["status"]
+            df2["Status"] = decisao[1]["status"]
             dfs_consolidados.append(df2)
 
             status_rows.append({
                 "stem": stem,
-                "status": decisao["status"],
+                "status": decisao[1]["status"],
                 "fonte": fonte,
-                "motivos": " | ".join(decisao["motivo"]) if decisao["motivo"] else ""
+                "motivos": " | ".join(decisao[1]["motivo"]) if decisao[1]["motivo"] else ""
             })
 
             # se veio do PDF e está REVISAR, o XLSX já foi salvo e a equipe corrige nele
@@ -173,7 +173,7 @@ def main():
         return
 
     try:
-        df_all, parametros_contrato, estornos_por_arquivo = processar_pasta(Path(pasta), Path(out_root))
+        _, _, parametros_contrato, estornos_por_arquivo = processar_pasta(Path(pasta), Path(out_root))
         #df_all.to_excel(out_dir / "dfs_consolidado.xlsx", index=False)
 
         # Preparar os input do LAUDO
