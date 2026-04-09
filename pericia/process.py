@@ -1,7 +1,11 @@
 import pandas as pd
+
 import pericia.ui as ui
 import pericia.calculations as cal
+
 from indices.bcb.service import atualizar_series_por_tx_mercado
+from pericia.models import ParametrosContrato
+from pericia.rules import decidir_capitalizacao
 
 def read_table_from_file(file_path):
     try:
@@ -43,11 +47,18 @@ def process_df(df, stem):
 
     # Solicitar entrada manual
     print("input de dados")
-    parametros = ui.create_input_with_options(stem)
+    parametros_brutos = ui.create_input_with_options(stem)
+
+    parametros_obj = ParametrosContrato.from_dict(parametros_brutos)
+    parametros_obj.validar()
+
+    decisao_cap = decidir_capitalizacao(parametros_obj.capitalizacao)
+
+    atualizar_series_por_tx_mercado(parametros_obj.tx_mercado)
 
     # Atualizar apenas as séries necessárias para a taxa escolhida
-    tx_mercado = parametros.get("tx_mercado")
-    atualizar_series_por_tx_mercado(tx_mercado)
+    #tx_mercado = parametros.get("tx_mercado")
+    #atualizar_series_por_tx_mercado(tx_mercado)
             
     # sequência do cálculo
     df.loc[:, "Historico"] = df["Historico"].apply(cal.classificar)
@@ -57,12 +68,31 @@ def process_df(df, stem):
     df.loc[:, 'basecalculo_ano'] = cal.basecalculo_ano(df["Data"])
     df.loc[:, 'snd']=cal.SN_D(df)
     df.loc[:, 'sna']=cal.SNA(df)
-    df.loc[:, 'snm']=cal.SNM(df, periodo=parametros['periodo'])
+    df.loc[:, 'snm']=cal.SNM(df, periodo=parametros_obj['periodo'])
     df.loc[:, 'juros']=cal.juros(df)
-    df.loc[:, "tx_mercado"] = cal.taxa_mercado(df, tx_mercado=parametros["tx_mercado"])
-    df.loc[:, 'tx_anual'] = cal.tx_anual(df, tx_equivalente=parametros['tx_equivalente'])
-    df.loc[:, 'tx_mensal'] = cal.tx_mensal(df, tx_equivalente=parametros['tx_equivalente'])
-    df.loc[:, 'estorno_credito'] = cal.estorno_credito(df, estornos=parametros['estornos'])
+    df.loc[:, "tx_mercado"] = cal.taxa_mercado(df, tx_mercado=parametros_obj["tx_mercado"])
+    df.loc[:, 'tx_anual'] = cal.tx_anual(df, tx_equivalente=parametros_obj['tx_equivalente'])
+    df.loc[:, 'tx_mensal'] = cal.tx_mensal(df, tx_equivalente=parametros_obj['tx_equivalente'])
+
+    # estornos escolhidos pelo usuário
+    df.loc[:, 'estorno_credito'] = cal.estorno_credito(df, estornos=parametros_obj['estornos'])
+    # regra adicional por decisão de capitalização
+    # Aqui você escolhe a estratégia:
+    # 1) simples: recalcula sem capitalização
+    # 2) composto: mantém a lógica corrente
+    # 3) afastar: gera coluna auxiliar / estorno adicional
+    if decisao_cap.aplicar_regime == "simples":
+        # ponto de expansão:
+        # df = cal.aplicar_regime_simples(df)
+        pass
+    elif decisao_cap.aplicar_regime == "composto":
+        # ponto de expansão:
+        # df = cal.aplicar_regime_composto(df)
+        pass
+    elif decisao_cap.aplicar_regime == "afastar":
+        # ponto de expansão:
+        # df = cal.afastar_capitalizacao(df)
+        pass
 
     # saldo recalculado
     df[["SALDO", "SND", "SNA", "SNM", "juros_recal", "juros_acumulado"]] = cal.saldo_recalculado(df)
@@ -72,7 +102,6 @@ def process_df(df, stem):
 
     # Calcular o debito recalculado e saldo recalculado
     df["debito_recal"] = 0.0
-
     posicao = df["juros_acumulado"].last_valid_index()
     if posicao is not None:
         df.loc[posicao, "debito_recal"] = df.loc[posicao, "juros_acumulado"]
@@ -80,6 +109,10 @@ def process_df(df, stem):
     
     # Coluna de juros recalculado
     df["saldo_recal"] = cal.juros_acumulado(df)
+
+    parametros = parametros_obj.to_dict()
+    #Decisao de capitalização
+    parametros["decisao_capitalizacao"] = decisao_cap.to_dict()
 
     #Resultado de pericia
     if parametros["agente"].endswith(("réu","ré")):

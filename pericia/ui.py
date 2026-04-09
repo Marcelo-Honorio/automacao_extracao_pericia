@@ -18,7 +18,17 @@ def create_input_with_options(steam: str):
             "valor_parcela": valor_parcela.get(),
             "numero_parcela": numero_parcela.get(),
             "tx_equivalente": tx_equivalente_var.get(),
-            "finalidade_op": finalidade_op.get()
+            "finalidade_op": finalidade_op.get(),
+            "Capitalização": {
+                "existe_capitalizacao": existe_cap_var.get() == "Sim",
+                "periodicidade_capitalizacao": periodicidade_cap_var.get(),
+                "taxa_anual_supera_duodecuplo": (
+                    True if taxa_supera_var.get() == "Sim"
+                    else False if taxa_supera_var.get() == "Não"
+                    else None
+                ),
+                "regime_capitalizacao": regime_cap_var.get()
+            }
         }
         root.quit()
 
@@ -113,6 +123,41 @@ def create_input_with_options(steam: str):
     serie = ["Nenhuma", "20726 - PJ Conta garantida", "20727 - PJ Cheque especial", "20741 - PF Cheque especial", "TMM - PF Conta garantida"]
     tx_mercado_var = ttk.Combobox(root,  values=serie, textvariable=tx_mercado, font=font_style)
     tx_mercado_var.grid(row=12, column=1, pady=2)
+
+    #Existência de capitalização
+    existe_cap_var = tk.StringVar(value="Não")
+    ttk.Label(root, text="Há cláusula de capitalização?", font=font_style).grid(row=13, column=0, sticky="w")
+    ttk.Combobox(root, values=["Sim", "Não"], textvariable=existe_cap_var, font=font_style).grid(row=13, column=1, pady=2)
+
+    #Periodicidade de capitalização
+    periodicidade_cap_var = tk.StringVar(value="omissa")
+    ttk.Label(root, text="Periodicidade da capitalização:", font=font_style).grid(row=14, column=0, sticky="w")
+    ttk.Combobox(
+        root,
+        values=["mensal", "anual", "diaria", "semestral", "omissa"],
+        textvariable=periodicidade_cap_var,
+        font=font_style
+    ).grid(row=14, column=1, pady=2)
+
+    #Apresentação da taxa de juros
+    taxa_supera_var = tk.StringVar(value="Não informado")
+    ttk.Label(root, text="Taxa anual > duodécuplo?", font=font_style).grid(row=15, column=0, sticky="w")
+    ttk.Combobox(
+        root,
+        values=["Sim", "Não", "Não informado"],
+        textvariable=taxa_supera_var,
+        font=font_style
+    ).grid(row=15, column=1, pady=2)
+
+    #Regime de capitalização
+    regime_cap_var = tk.StringVar(value="nao_informado")
+    ttk.Label(root, text="Regime da capitalização:", font=font_style).grid(row=16, column=0, sticky="w")
+    ttk.Combobox(
+        root,
+        values=["simples", "composto", "omisso", "nao_informado"],
+        textvariable=regime_cap_var,
+        font=font_style
+    ).grid(row=16, column=1, pady=2)
     
     # Salvar/Cancelar
     ttk.Button(root, text="Salvar", command=salvar).grid(row=13, column=0, pady=10)
