@@ -403,14 +403,14 @@ def taxa_mercado(df: pd.DataFrame, tx_mercado: str, coluna_data: str = "Data") -
     Retorna uma lista com a taxa de mercado correspondente a cada data do DataFrame.
     """
     SERIES_BCB = {
-        "20726 - PJ Conta garantida": 20726,
-        "20727 - PJ Cheque especial": 20727,
-        "20741 - PF Cheque especial": 20741,
-        "TMM - PF Conta garantida": {
-            "pj_cheque": 20727,
-            "pf_cheque": 20741,
-            "pj_conta": 20726,
-        },
+        "PF20769_taxas_mercado": 20769,
+        "PF20770_taxas_reguladas": 20770,
+        "Taxa limite - 12%": 12.00
+#        "TMM - PF Conta garantida": {
+#            "pj_cheque": 20727,
+#            "pf_cheque": 20741,
+#            "pj_conta": 20726,
+#        },
     }
 
     df = df.copy()
@@ -431,42 +431,9 @@ def taxa_mercado(df: pd.DataFrame, tx_mercado: str, coluna_data: str = "Data") -
 
     taxas = []
     # Fórmula composta:
-    # p = (TMM Cheque Especial PJ / TMM Cheque Especial PF) * TMM Conta Garantida PJ
-    if tx_mercado == "TMM - PF Conta garantida":
-        cache = {
-            "pj_cheque": {},
-            "pf_cheque": {},
-            "pj_conta": {},
-        }
-        for data in df[coluna_data]:
-            chave = data.strftime("%Y-%m-%d")
-            valores = {}
-
-            for nome, codigo in codigo_serie.items():
-                if chave not in cache[nome]:
-                    taxa_info = obter_taxa_por_data(codigo, chave)
-                    cache[nome][chave] = (
-                        taxa_info["valor"] if taxa_info is not None else None
-                    )
-
-                valores[nome] = cache[nome][chave]
-
-            pj_cheque = valores["pj_cheque"]
-            pf_cheque = valores["pf_cheque"]
-            pj_conta = valores["pj_conta"]
-
-            # Tratamento seguro
-            if (
-                pj_cheque is None
-                or pf_cheque is None
-                or pf_cheque == 0
-                or pj_conta is None
-            ):
-                taxas.append(None)
-            else:
-                p = (pj_cheque / pf_cheque) * pj_conta
-                taxas.append(transf_anual_mensal(p))
-
+    if tx_mercado == "Taxa limite - 12%":
+        tx = SERIES_BCB["Taxa limite - 12%"]
+        taxas = [tx] * len(df[coluna_data])
         return taxas
 
     ## Buscar uma taxa especifica

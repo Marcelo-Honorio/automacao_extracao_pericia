@@ -17,7 +17,7 @@ def _ler_csv_bcb(texto: str) -> pd.DataFrame:
         raise ValueError("Resposta da API não contém colunas 'data' e 'valor'.")
 
     df["data"] = pd.to_datetime(df["data"], dayfirst=True, errors="coerce")
-
+    
     df["valor"] = (
         df["valor"]
         .astype(str)

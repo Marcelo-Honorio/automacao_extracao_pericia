@@ -120,7 +120,7 @@ def create_input_with_options(steam: str):
     # Janela de Taxa de mercado
     ttk.Label(root, text="Taxa de mercado:", font=font_style).grid(row=12, column=0, sticky="w")
     tx_mercado = tk.StringVar(value="Nenhuma")
-    serie = ["Nenhuma", "20726 - PJ Conta garantida", "20727 - PJ Cheque especial", "20741 - PF Cheque especial", "TMM - PF Conta garantida"]
+    serie = ["Nenhuma", "20769 - PF Crédito rural com taxas de mercado", "20770 - PF Crédito rural com taxas reguladas", "Taxa limite - 12%"]
     tx_mercado_var = ttk.Combobox(root,  values=serie, textvariable=tx_mercado, font=font_style)
     tx_mercado_var.grid(row=12, column=1, pady=2)
 
@@ -150,18 +150,18 @@ def create_input_with_options(steam: str):
     ).grid(row=15, column=1, pady=2)
 
     #Regime de capitalização
-    regime_cap_var = tk.StringVar(value="nao_informado")
+    regime_cap_var = tk.StringVar(value="Não informado")
     ttk.Label(root, text="Regime da capitalização:", font=font_style).grid(row=16, column=0, sticky="w")
     ttk.Combobox(
         root,
-        values=["simples", "composto", "omisso", "nao_informado"],
+        values=["simples", "composto", "omisso", "Não informado"],
         textvariable=regime_cap_var,
         font=font_style
     ).grid(row=16, column=1, pady=2)
     
     # Salvar/Cancelar
-    ttk.Button(root, text="Salvar", command=salvar).grid(row=13, column=0, pady=10)
-    ttk.Button(root, text="Cancelar", command=cancelar).grid(row=13, column=1, pady=10)
+    ttk.Button(root, text="Salvar", command=salvar).grid(row=17, column=0, pady=10)
+    ttk.Button(root, text="Cancelar", command=cancelar).grid(row=17, column=1, pady=10)
     
     root.mainloop()
     root.destroy()

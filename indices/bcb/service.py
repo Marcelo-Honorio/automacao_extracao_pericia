@@ -8,12 +8,11 @@ from .store import (
     ultima_data_local,
 )
 from .config import SERIES
-
+# no futuro incluir: TMM - PF Conta garantida": [20727, 20741, 20726]
 TX_MERCADO_SERIES = {
-    "20726 - PJ Conta garantida": [20726],
-    "20727 - PJ Cheque especial": [20727],
-    "20741 - PF Cheque especial": [20741],
-    "TMM - PF Conta garantida": [20727, 20741, 20726],
+    "20769 - PF Crédito rural com taxas de mercado": [20769],
+    "20770 - PF Crédito rural com taxas reguladas": [20770],
+    #"TMM - PF Conta garantida": [20727, 20741, 20726],
 }
 
 _SERIES_ATUALIZADAS = set()
