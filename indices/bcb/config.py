@@ -8,9 +8,8 @@ DATA_DIR.mkdir(parents=True, exist_ok=True)
 BASE_URL = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.{codigo}/dados?formato=csv"
 
 SERIES = {
-    20726: "serie_20726.csv",
-    20727: "serie_20727.csv",
-    20741: "serie_20741.csv",
+    20769: "serie_20769.csv",
+    20770: "serie_20770.csv",
 }
 
 TIMEOUT = 30

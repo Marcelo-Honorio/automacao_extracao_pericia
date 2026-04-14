@@ -68,14 +68,14 @@ def process_df(df, stem):
     df.loc[:, 'basecalculo_ano'] = cal.basecalculo_ano(df["Data"])
     df.loc[:, 'snd']=cal.SN_D(df)
     df.loc[:, 'sna']=cal.SNA(df)
-    df.loc[:, 'snm']=cal.SNM(df, periodo=parametros_obj['periodo'])
+    df.loc[:, 'snm']=cal.SNM(df, periodo=parametros_obj.periodo)
     df.loc[:, 'juros']=cal.juros(df)
-    df.loc[:, "tx_mercado"] = cal.taxa_mercado(df, tx_mercado=parametros_obj["tx_mercado"])
-    df.loc[:, 'tx_anual'] = cal.tx_anual(df, tx_equivalente=parametros_obj['tx_equivalente'])
-    df.loc[:, 'tx_mensal'] = cal.tx_mensal(df, tx_equivalente=parametros_obj['tx_equivalente'])
+    df.loc[:, "tx_mercado"] = cal.taxa_mercado(df, tx_mercado=parametros_obj.tx_mercado)
+    df.loc[:, 'tx_anual'] = cal.tx_anual(df, tx_equivalente=parametros_obj.tx_equivalente)
+    df.loc[:, 'tx_mensal'] = cal.tx_mensal(df, tx_equivalente=parametros_obj.tx_equivalente)
 
     # estornos escolhidos pelo usuário
-    df.loc[:, 'estorno_credito'] = cal.estorno_credito(df, estornos=parametros_obj['estornos'])
+    df.loc[:, 'estorno_credito'] = cal.estorno_credito(df, estornos=parametros_obj.estornos)
     # regra adicional por decisão de capitalização
     # Aqui você escolhe a estratégia:
     # 1) simples: recalcula sem capitalização
