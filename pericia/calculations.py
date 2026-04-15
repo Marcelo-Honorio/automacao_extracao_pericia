@@ -403,8 +403,8 @@ def taxa_mercado(df: pd.DataFrame, tx_mercado: str, coluna_data: str = "Data") -
     Retorna uma lista com a taxa de mercado correspondente a cada data do DataFrame.
     """
     SERIES_BCB = {
-        "PF20769_taxas_mercado": 20769,
-        "PF20770_taxas_reguladas": 20770,
+        "20769 - PF Crédito rural com taxas de mercado": 20769,
+        "20770 - PF Crédito rural com taxas reguladas": 20770,
         "Taxa limite - 12%": 12.00
 #        "TMM - PF Conta garantida": {
 #            "pj_cheque": 20727,
