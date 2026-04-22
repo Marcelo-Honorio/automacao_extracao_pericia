@@ -117,12 +117,13 @@ def extrair_em_lote(pasta_ou_lista):
     Aceita uma pasta (string) ou uma lista de caminhos.
     Retorna DF concatenado.
     """
+    padrao = re.compile(r'ficha\D*gr[aá]fica', re.IGNORECASE)
     paths = []
     if isinstance(pasta_ou_lista, (list, tuple, set)):
         paths = list(pasta_ou_lista)
     else:
         pasta = Path(pasta_ou_lista)
-        paths = [str(p) for p in pasta.glob("*.pdf")]
+        paths = [str(p) for p in pasta.glob("*.pdf") if padrao.search(p.stem)]
 
     dfs = []
     for p in paths:

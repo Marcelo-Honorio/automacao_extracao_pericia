@@ -17,6 +17,7 @@ def processar_pasta(pasta: Path, out_root: Path):
     # bibliotecas
     import pandas as pd
     import json
+    import re
     from extrator.logging_utils import setup_logger
     #from extrator.io_utils import salvar_resultados
     from extrator.ficha_grafica import extrair_ficha_grafica_pdf  # sua função atual
@@ -24,15 +25,17 @@ def processar_pasta(pasta: Path, out_root: Path):
     from extrator.validation import rodar_validacoes_e_decidir
     from pericia.process import process_df
     from pericia.oi_utils import salvar_resultados
-    from laudo.render_xlsx import gerar_relatorio 
+    from laudo.render_xlsx import gerar_relatorio
 
     out_dir = out_root
     (out_dir / "logs").mkdir(parents=True, exist_ok=True)
     logger = setup_logger(out_dir / "logs")
 
     logger.info(f"Iniciando processamento da pasta: {pasta}")
-    pdfs = {p.stem: p for p in pasta.glob("*.pdf")}
-    xlsx_in = {p.stem: p for p in pasta.glob("*.xlsx")}
+    ## regex para capturar ficha gráfica
+    padrao = re.compile(r'ficha\D*gr[aá]fica', re.IGNORECASE)
+    pdfs = {p.stem: p for p in pasta.glob("*.pdf") if padrao.search(p.stem)}
+    xlsx_in = {p.stem: p for p in pasta.glob("*.xlsx") if padrao.search(p.stem)}
 
     # pega XLSX já existentes na pasta de saída (corrigidos)
     xlsx_out = {p.stem: p for p in out_dir.glob("*.xlsx")}
