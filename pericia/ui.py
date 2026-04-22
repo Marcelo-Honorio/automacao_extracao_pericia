@@ -94,7 +94,7 @@ def create_input_with_options(steam: str):
     tx_equivalente_combo.grid(row=7, column=1, pady=2)
     
     # Janela de taxa de juros
-    ttk.Label(root, text="Taxa de juros:", font=font_style).grid(row=8, column=0, sticky="w")
+    ttk.Label(root, text="Taxa de juros efetiva:", font=font_style).grid(row=8, column=0, sticky="w")
     juros_var = tk.DoubleVar(value=0.00)
     juros_entry = ttk.Entry(root, textvariable=juros_var, font=font_style)
     juros_entry.grid(row=8, column=1, pady=2)
