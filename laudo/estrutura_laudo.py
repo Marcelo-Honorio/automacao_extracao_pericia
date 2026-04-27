@@ -55,6 +55,69 @@ SECOES = {
     },
 }
 
+def normalizar_texto(valor):
+    if valor is None:
+        return ""
+    return str(valor).strip().lower()
+
+
+def gerar_decisoes_periciais(dados: dict) -> dict:
+    capitalizacao = dados.get("Capitalização", {})
+    estornos = dados.get("estornos", []) or []
+    inadimplemento = dados.get("opcoes_inadimplento", []) or []
+
+    tx_mercado = normalizar_texto(dados.get("tx_mercado"))
+    periodo_capitalizacao = normalizar_texto(
+        capitalizacao.get("periodicidade_capitalizacao")
+    )
+    regime_capitalizacao = normalizar_texto(
+        capitalizacao.get("regime_capitalizacao")
+    )
+
+    existe_capitalizacao = capitalizacao.get("existe_capitalizacao") is True
+
+    return {
+        # Futuro — por enquanto sempre falso
+        "juros_carencia_sem_datas_claras": False,
+        "encadeamento_operacoes": False,
+        "cdi_com_substituicao_indevida": False,
+        "cdi_como_encargo_remuneratorio": False,
+        "capitalizacao_anual_sem_pactuacao": False,
+
+        # Encargos remuneratórios
+        "taxa_superior_media_mercado": sum(["20769" in i for i in tx_mercado])>0,
+        "juros_superiores_plano_safra": sum([("20769" in i or "20770" in i) for i in tx_mercado])>0,
+        "juros_superiores_12_aa_credito_rural": sum(["12%" in i for i in tx_mercado])>0,
+
+        # Resultado da perícia — alimentar futuramente por cálculo
+        "taxa_superior_contrato_originario": dados.get("juros_superior_contrato_originario") is True,
+
+        # Capitalização
+        "capitalizacao_sem_pactuacao": (
+            existe_capitalizacao is not True
+            or periodo_capitalizacao in {"", "não informado", "nao informado"}
+            or regime_capitalizacao in {"", "não informado", "nao informado"}
+        ),
+
+        "periodicidade_capitalizacao_rural": (
+            periodo_capitalizacao != "semestral"
+            and periodo_capitalizacao != ""
+        ),
+
+        # Estornos
+        "cobranca_indevida_seguros_tarifa": len(estornos) > 0,
+
+        # Inadimplemento
+        "inadimplemento_ilegal_oneroso": (
+            "remuneratorio_mora_a.m" in inadimplemento
+            or (existe_capitalizacao is not True 
+                or periodo_capitalizacao in {"", "não informado", "nao informado"} 
+                or regime_capitalizacao in {"", "não informado", "nao informado"}
+                ) is True
+            or dados.get("juros_superior_taxa_limite_ou_mercado") is True
+        ),
+    }
+
 # catalogo de irregularidades
 IRREGULARIDADES = {
     "juros_carencia_sem_datas_claras": Irregularidade(
@@ -188,71 +251,7 @@ IRREGULARIDADES = {
     ),
 }
 
-def normalizar_texto(valor):
-    if valor is None:
-        return ""
-    return str(valor).strip().lower()
-
-
-def gerar_decisoes_periciais(dados: dict) -> dict:
-    capitalizacao = dados.get("Capitalização", {})
-    estornos = dados.get("estornos", []) or []
-    inadimplemento = dados.get("opcoes_inadimplento", []) or []
-
-    tx_mercado = normalizar_texto(dados.get("tx_mercado"))
-    periodo_capitalizacao = normalizar_texto(
-        capitalizacao.get("periodicidade_capitalizacao")
-    )
-    regime_capitalizacao = normalizar_texto(
-        capitalizacao.get("regime_capitalizacao")
-    )
-
-    existe_capitalizacao = capitalizacao.get("existe_capitalizacao") is True
-
-    return {
-        # Futuro — por enquanto sempre falso
-        "juros_carencia_sem_datas_claras": False,
-        "encadeamento_operacoes": False,
-        "cdi_com_substituicao_indevida": False,
-        "cdi_como_encargo_remuneratorio": False,
-        "capitalizacao_anual_sem_pactuacao": False,
-
-        # Encargos remuneratórios
-        "taxa_superior_media_mercado": tx_mercado == "taxa não controlada (20769)",
-        "juros_superiores_plano_safra": tx_mercado in {
-            "taxa controlada (20770)",
-            "taxa controlada (20769)",
-            "taxa controlada (20770 e 20769)",
-        },
-        "juros_superiores_12_aa_credito_rural": tx_mercado == "taxa limite",
-
-        # Resultado da perícia — alimentar futuramente por cálculo
-        "taxa_superior_contrato_originario": dados.get("juros_superior_contrato_originario") is True,
-
-        # Capitalização
-        "capitalizacao_sem_pactuacao": (
-            existe_capitalizacao is not True
-            or periodo_capitalizacao in {"", "não informado", "nao informado"}
-            or regime_capitalizacao in {"", "não informado", "nao informado"}
-        ),
-
-        "periodicidade_capitalizacao_rural": (
-            periodo_capitalizacao != "semestral"
-            and periodo_capitalizacao != ""
-        ),
-
-        # Estornos
-        "cobranca_indevida_seguros_tarifa": len(estornos) > 0,
-
-        # Inadimplemento
-        "inadimplemento_ilegal_oneroso": (
-            "remuneratorio_mora_a.m" in inadimplemento
-            or dados.get("anatocismo") is True
-            or dados.get("juros_superior_taxa_limite_ou_mercado") is True
-        ),
-    }
-
-
+# Funções para montar estrutura
 def identificar_irregularidades(decisoes: dict) -> list[Irregularidade]:
     itens = []
 
@@ -360,6 +359,9 @@ dados = {
         "regime_capitalizacao": "Não informado",
     },
 }
+
+
+
 
 decisoes = gerar_decisoes_periciais(dados)
 estrutura = montar_estrutura_laudo(dados)

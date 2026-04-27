@@ -171,11 +171,11 @@ def create_input_with_options(steam: str):
     ttk.Combobox(root, values=["Sim", "Não"], textvariable=existe_cap_var, font=font_style).grid(row=15, column=1, pady=2)
 
     #Periodicidade de capitalização
-    periodicidade_cap_var = tk.StringVar(value="omissa")
+    periodicidade_cap_var = tk.StringVar(value="Não informado")
     ttk.Label(root, text="Periodicidade da capitalização:", font=font_style).grid(row=16, column=0, sticky="w")
     ttk.Combobox(
         root,
-        values=["mensal", "anual", "diaria", "semestral", "omissa"],
+        values=["mensal", "anual", "diaria", "semestral", "Não informado"],
         textvariable=periodicidade_cap_var,
         font=font_style
     ).grid(row=16, column=1, pady=2)
