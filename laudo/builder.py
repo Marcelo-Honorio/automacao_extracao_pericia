@@ -24,6 +24,26 @@ ESTORNOS_MAP = {
     }
 }
 
+# Função para definir agente de continuidade (agente vem do ui.create_input_with_options())
+def agente_continuidade(agente:str):
+    #definir agente de continuidade
+    if agente.endswith(("réu", "ré")):
+        return "da operação celebrada"
+    else:
+        return "das operações celebradas"
+
+# Função para definir o produtor ou a produtora (agente vem do ui.create_input_with_options())
+def definir_produtor(agente:str):
+    #Definir a produtor em relação ao agente
+    if agente.endswith("réu"):
+        return  "o produtor"
+    elif agente.endswith("ré"):
+        return "a produtora"
+    elif agente.endswith("réus"):
+        return "os produtores"
+    elif agente.endswith("rés"):
+        return "as produtoras"
+
 # Montar os estornos com os valores
 def montar_itens_estorno(estornos_selecionados, valores_apurados):
     itens = []
@@ -111,3 +131,4 @@ def transformar_input_para_contexto(dados_dict: dict, valores_por_arquivo):
         "agente_continuidade": continuidade or "",
         "contratos": contratos
     }
+ 
