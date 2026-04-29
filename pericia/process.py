@@ -114,15 +114,16 @@ def process_df(df, stem):
     #Decisao de capitalização
     parametros["decisao_capitalizacao"] = decisao_cap.to_dict()
 
+    ############################ EXCLUIR NO FUTURO #########################################
     #Resultado de pericia
-    if parametros["agente"].endswith(("réu","ré")):
-        parametros["agente_continuidade"] = "da operação celebrada"
-    else:
-        parametros["agente_continuidade"] = "das operações celebradas"
+    #if parametros["agente"].endswith(("réu","ré")):
+    #    parametros["agente_continuidade"] = "da operação celebrada"
+    #else:
+    #    parametros["agente_continuidade"] = "das operações celebradas"
 
     # Separando substantivos nos parametros
-    parametros["substantivo"] = parametros["agente"].split()[1].capitalize()
-
+    #parametros["substantivo"] = parametros["agente"].split()[1].capitalize()
+    ###########################################################################################
     parametros.update(df[["SALDO", "saldo_recal"]].iloc[-1].to_dict())
     estorno_apurado = cal.estorno_resultado(df, estornos=parametros['estornos'])
 

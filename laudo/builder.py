@@ -36,13 +36,13 @@ def agente_continuidade(agente:str):
 def definir_produtor(agente:str):
     #Definir a produtor em relação ao agente
     if agente.endswith("réu"):
-        return  "o produtor"
+        return  ["o produtor", "ele"]
     elif agente.endswith("ré"):
-        return "a produtora"
+        return ["a produtora", "ela"]
     elif agente.endswith("réus"):
-        return "os produtores"
+        return ["os produtores", "eles"]
     elif agente.endswith("rés"):
-        return "as produtoras"
+        return ["as produtoras", "elas"]
 
 # Montar os estornos com os valores
 def montar_itens_estorno(estornos_selecionados, valores_apurados):
@@ -64,6 +64,13 @@ def montar_itens_estorno(estornos_selecionados, valores_apurados):
 
     return itens
 
+# Função para definir operações e operacão (agente vem do ui.create_input_with_options())
+def definir_n_operacao(dados_dict:dict):
+    # contar número de contrato
+    if len(dados_dict.items()) == 1:
+        return "o contrato"
+    else:
+        return "os contratos"
 
 # transforma os input para utilizar no Laudo
 def transformar_input_para_contexto(dados_dict: dict, valores_por_arquivo):
@@ -85,6 +92,11 @@ def transformar_input_para_contexto(dados_dict: dict, valores_por_arquivo):
         ]
     }
     """
+    #quantidade de contratos e operações financeiras
+    quant_contrato = definir_n_operacao(dados_dict)
+    
+
+
     contratos = []
     substantivo = None
     agente = None
@@ -92,14 +104,17 @@ def transformar_input_para_contexto(dados_dict: dict, valores_por_arquivo):
     continuidade = None
 
     for nome_arquivo, dados in dados_dict.items():
-        if substantivo is None:
-            substantivo = dados.get("substantivo", "")        
+        #if substantivo is None:
+        #    substantivo = dados.get("substantivo", "")        
         if agente is None:
             agente = dados.get("agente", "")
+            produtor_a = definir_produtor(dados.get("agente"))
+            continuidade = agente_continuidade(dados.get("agente"))
+            substantivo= agente.split()[1].capitalize()
         if cliente is None:
             cliente = dados.get("cliente", "")
-        if continuidade is None:
-            continuidade = dados.get("agente_continuidade", "")
+        #if continuidade is None:
+        #    continuidade = dados.get("agente_continuidade", "")
 
         valores_apurados = valores_por_arquivo.get(nome_arquivo, {})
 
@@ -127,8 +142,12 @@ def transformar_input_para_contexto(dados_dict: dict, valores_por_arquivo):
     return {
         "substantivo": substantivo or "",
         "agente": agente or "",
+        "produtor_genero" : { 
+            "sujeito": produtor_a[0] or "",
+            "pronome": produtor_a[1] or "",
+            },
         "cliente": cliente or "",
         "agente_continuidade": continuidade or "",
+        "descricao_operacao_contrato": quant_contrato or "",
         "contratos": contratos
     }
- 
