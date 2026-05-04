@@ -36,13 +36,13 @@ def agente_continuidade(agente:str):
 def definir_produtor(agente:str):
     #Definir a produtor em relação ao agente
     if agente.endswith("réu"):
-        return  ["o produtor", "ele"]
+        return  ["o produtor", "ele", "foi constrangido"]
     elif agente.endswith("ré"):
-        return ["a produtora", "ela"]
+        return ["a produtora", "ela", "foi constrangida"]
     elif agente.endswith("réus"):
-        return ["os produtores", "eles"]
+        return ["os produtores", "eles", "foram constrangidos"]
     elif agente.endswith("rés"):
-        return ["as produtoras", "elas"]
+        return ["as produtoras", "elas", "foram constrangidas"]
 
 # Montar os estornos com os valores
 def montar_itens_estorno(estornos_selecionados, valores_apurados):
@@ -68,9 +68,21 @@ def montar_itens_estorno(estornos_selecionados, valores_apurados):
 def definir_n_operacao(dados_dict:dict):
     # contar número de contrato
     if len(dados_dict.items()) == 1:
-        return "o contrato"
+        return ["o contrato", "atende", "na operação", "analisado tem"]
     else:
-        return "os contratos"
+        return ["os contratos", "atendem", "nas operações", "analisados têm"]
+
+# Função para definir operações com a taxa limite maior que 12%
+def definir_operacao_12por(dados_dic:dict):
+    # consultar se existe algum contrato para questionar a taxa limite
+    operacoes = 0
+    for n, d in dados_dic.items():
+        if d.get("tx_mercado")=="Taxa limite - 12%":
+            operacoes =+ 1
+    if operacoes >= 1:
+        return "as cédulas foram celebradas"
+    if operacoes == 1:
+        return "a cédula foi celebrada"
 
 # transforma os input para utilizar no Laudo
 def transformar_input_para_contexto(dados_dict: dict, valores_por_arquivo):
@@ -94,14 +106,15 @@ def transformar_input_para_contexto(dados_dict: dict, valores_por_arquivo):
     """
     #quantidade de contratos e operações financeiras
     quant_contrato = definir_n_operacao(dados_dict)
+    #operações com a taxa limite maior que 12%
+    operacoes_tx_limite = definir_operacao_12por(dados_dict)
     
-
-
     contratos = []
     substantivo = None
     agente = None
     cliente = None
     continuidade = None
+    op_limite = None
 
     for nome_arquivo, dados in dados_dict.items():
         #if substantivo is None:
@@ -113,7 +126,8 @@ def transformar_input_para_contexto(dados_dict: dict, valores_por_arquivo):
             substantivo= agente.split()[1].capitalize()
         if cliente is None:
             cliente = dados.get("cliente", "")
-        #if continuidade is None:
+        if dados.get("tx_mercado")=="Taxa limite - 12%":
+            op_limite += 1
         #    continuidade = dados.get("agente_continuidade", "")
 
         valores_apurados = valores_por_arquivo.get(nome_arquivo, {})
@@ -148,6 +162,16 @@ def transformar_input_para_contexto(dados_dict: dict, valores_por_arquivo):
             },
         "cliente": cliente or "",
         "agente_continuidade": continuidade or "",
-        "descricao_operacao_contrato": quant_contrato or "",
+        "descricao_op_contrato": {
+            "quantidade": quant_contrato[0] or "",
+            "verbo": quant_contrato[1] or "",
+            "quantidade_op": quant_contrato[2] or "",
+            "tem": quant_contrato[3] or "",
+            },
+        "operacao_tx_limite": operacoes_tx_limite or "",
         "contratos": contratos
     }
+
+trans_input = transformar_input_para_contexto(dados, valores_por_arquivo)
+
+57

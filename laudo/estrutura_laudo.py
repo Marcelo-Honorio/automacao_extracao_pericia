@@ -363,9 +363,9 @@ dados = {
 
 
 
-#decisoes = gerar_decisoes_periciais(dados)
-#estrutura = montar_estrutura_laudo(dados) #remontar a os itens e sub itens
-#blocos = montar_blocos_ativos(dados) #remontar a os itens e sub itens
+decisoes = gerar_decisoes_periciais(dados)
+estrutura = montar_estrutura_laudo(dados) #remontar a os itens e sub itens
+blocos = montar_blocos_ativos(dados) #remontar a os itens e sub itens
 #sumario = montar_sumario_dinamico(dados)
 
 #print(decisoes)
