@@ -1,28 +1,5 @@
 from laudo.formatters import fmt_moeda
-
-# CHAVES E VALORES PARA OS ESTORNOS
-ESTORNOS_MAP = {
-    "Seguro Penhor": {
-        "chave": "seguro_penhor",
-        "rotulo": "Seguro Penhor"
-    },
-    "Seguro de Vida": {
-        "chave": "seguro_vida",
-        "rotulo": "Seguro de Vida – Produtor Rural"
-    },
-    "Seguro Agrícola": {
-        "chave": "seguro_agricola",
-        "rotulo": "Seguro Agrícola"
-    },
-    "Tarifa": {
-        "chave": "tarifa",
-        "rotulo": "Tarifa de Estudo de Operações"
-    },
-    "Juros de Mora": {
-        "chave": "juros_mora",
-        "rotulo": "Juros de Mora"
-    }
-}
+from laudo.config import OPCOES_ESTORNO, ESTORNOS_MAP
 
 # Função para definir agente de continuidade (agente vem do ui.create_input_with_options())
 def agente_continuidade(agente:str):
@@ -73,16 +50,55 @@ def definir_n_operacao(dados_dict:dict):
         return ["os contratos", "atendem", "nas operações", "analisados têm"]
 
 # Função para definir operações com a taxa limite maior que 12%
-def definir_operacao_12por(dados_dic:dict):
+def definir_operacao_12por(dados_dict:dict):
     # consultar se existe algum contrato para questionar a taxa limite
     operacoes = 0
-    for n, d in dados_dic.items():
+    for n, d in dados_dict.items():
         if d.get("tx_mercado")=="Taxa limite - 12%":
             operacoes =+ 1
-    if operacoes >= 1:
+    if operacoes > 1:
         return "as cédulas foram celebradas"
     if operacoes == 1:
         return "a cédula foi celebrada"
+
+
+
+# Função para definir os tipos de estornos
+def lista_para_texto(lista):
+    if not lista:
+        return ""
+    if len(lista) == 1:
+        return lista[0]
+    if len(lista) == 2:
+        return " e ".join(lista)
+    return ", ".join(lista[:-1]) + " e " + lista[-1]
+
+def definir_estornos(dados_dic:dict):
+    estorno = {}
+    lista_estorno = [] 
+    for n, d in dados_dic.items():
+        for i in d.get("estornos", []):
+            if i not in lista_estorno:
+                lista_estorno.append(i)
+    # mapa código -> nome
+    mapa = {codigo: nome for nome, codigo in OPCOES_ESTORNO}
+
+    # ------- SEGURO --------
+    flags_seguro = [i.find("seguro")==0 for i in lista_estorno]
+    
+    if any(flags_seguro):
+        lista = [i for i, f in zip(lista_estorno, flags_seguro) if f]
+        nomes = [mapa[item] for item in lista if item in mapa]
+        estorno["seguro"] = lista_para_texto(nomes)
+    
+    # ------ TARIFA ----------
+    flags_tarifa = [i.find("tarifa")==0 for i in lista_estorno]
+    if any(flags_tarifa):
+        lista = [i for i, f in zip(lista_estorno, flags_tarifa) if f]
+        nomes = [mapa[item] for item in lista if item in mapa]
+        estorno["tarifa"] = lista_para_texto(nomes)
+
+    return estorno
 
 # transforma os input para utilizar no Laudo
 def transformar_input_para_contexto(dados_dict: dict, valores_por_arquivo):
@@ -108,14 +124,15 @@ def transformar_input_para_contexto(dados_dict: dict, valores_por_arquivo):
     quant_contrato = definir_n_operacao(dados_dict)
     #operações com a taxa limite maior que 12%
     operacoes_tx_limite = definir_operacao_12por(dados_dict)
+    #estornos 
+    estornos = definir_estornos(dados_dict)
     
     contratos = []
     substantivo = None
     agente = None
     cliente = None
     continuidade = None
-    op_limite = None
-
+    
     for nome_arquivo, dados in dados_dict.items():
         #if substantivo is None:
         #    substantivo = dados.get("substantivo", "")        
@@ -126,8 +143,6 @@ def transformar_input_para_contexto(dados_dict: dict, valores_por_arquivo):
             substantivo= agente.split()[1].capitalize()
         if cliente is None:
             cliente = dados.get("cliente", "")
-        if dados.get("tx_mercado")=="Taxa limite - 12%":
-            op_limite += 1
         #    continuidade = dados.get("agente_continuidade", "")
 
         valores_apurados = valores_por_arquivo.get(nome_arquivo, {})
@@ -159,6 +174,7 @@ def transformar_input_para_contexto(dados_dict: dict, valores_por_arquivo):
         "produtor_genero" : { 
             "sujeito": produtor_a[0] or "",
             "pronome": produtor_a[1] or "",
+            "verbo_foi": produtor_a[2] or "",
             },
         "cliente": cliente or "",
         "agente_continuidade": continuidade or "",
@@ -169,9 +185,12 @@ def transformar_input_para_contexto(dados_dict: dict, valores_por_arquivo):
             "tem": quant_contrato[3] or "",
             },
         "operacao_tx_limite": operacoes_tx_limite or "",
+        "estornos": estornos or "",
         "contratos": contratos
     }
 
-trans_input = transformar_input_para_contexto(dados, valores_por_arquivo)
 
-57
+trans_input = transformar_input_para_contexto(parametros_contrato, estornos_por_arquivo)
+
+lista_estorno = definir_estornos(parametros_contrato)
+
