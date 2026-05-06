@@ -61,8 +61,6 @@ def definir_operacao_12por(dados_dict:dict):
     if operacoes == 1:
         return "a cédula foi celebrada"
 
-
-
 # Função para definir os tipos de estornos
 def lista_para_texto(lista):
     if not lista:
@@ -70,13 +68,13 @@ def lista_para_texto(lista):
     if len(lista) == 1:
         return lista[0]
     if len(lista) == 2:
-        return " e ".join(lista)
-    return ", ".join(lista[:-1]) + " e " + lista[-1]
+        return " e o ".join(lista)
+    return ", ".join(lista[:-1]) + " e o " + lista[-1]
 
-def definir_estornos(dados_dic:dict):
+def definir_estornos(dados_dict:dict):
     estorno = {}
     lista_estorno = [] 
-    for n, d in dados_dic.items():
+    for n, d in dados_dict.items():
         for i in d.get("estornos", []):
             if i not in lista_estorno:
                 lista_estorno.append(i)
@@ -102,24 +100,7 @@ def definir_estornos(dados_dic:dict):
 
 # transforma os input para utilizar no Laudo
 def transformar_input_para_contexto(dados_dict: dict, valores_por_arquivo):
-    """
-    Transforma:
-    {
-        "03-Grafico": {...},
-        "04-Grafico": {...}
-    }
-
-    em:
-
-    {
-        "autor": "...",
-        "cliente": "...",
-        "contratos": [
-            {...},
-            {...}
-        ]
-    }
-    """
+    
     #quantidade de contratos e operações financeiras
     quant_contrato = definir_n_operacao(dados_dict)
     #operações com a taxa limite maior que 12%
@@ -189,8 +170,6 @@ def transformar_input_para_contexto(dados_dict: dict, valores_por_arquivo):
         "contratos": contratos
     }
 
-
 trans_input = transformar_input_para_contexto(parametros_contrato, estornos_por_arquivo)
 
 lista_estorno = definir_estornos(parametros_contrato)
-

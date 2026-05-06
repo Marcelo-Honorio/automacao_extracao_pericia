@@ -308,7 +308,14 @@ def montar_blocos_ativos(dados: dict) -> dict:
     return blocos
 
 # Montar dicionario de estornos no contrato (estornos_selecionados =  lista de estornos)
-def gerar_flags_estornos(estornos_selecionados):
+def gerar_flags_estornos(dados_dict:dict):
+    #criar a lisa de estornos
+    lista_estorno = []
+    for n, d in dados_dict.items():
+        for i in d.get("estornos", []):
+            if i not in lista_estorno:
+                lista_estorno.append(i)
+    # Possiveis estornos
     todos = [
         "seguro_penhor",
         "seguro_vida",
@@ -317,7 +324,7 @@ def gerar_flags_estornos(estornos_selecionados):
         "tarifa",
     ]
     
-    return {item: item in estornos_selecionados for item in todos}
+    return {item: item in lista_estorno for item in todos}
 
 def montar_sumario_dinamico(dados: dict) -> list[dict]:
     estrutura = montar_estrutura_laudo(dados)
@@ -372,9 +379,10 @@ dados = {
 }
 
 
-dados = parametros_contrato
+#dados = parametros_contrato
 
-decisoes = gerar_decisoes_periciais(dados)
+#decisoes = gerar_decisoes_periciais(dados)
+#estornos = gerar_flags_estornos(parametros_contrato)
 #estrutura = montar_estrutura_laudo(dados) #remontar a os itens e sub itens
 #blocos = montar_blocos_ativos(dados) #remontar a os itens e sub itens
 #sumario = montar_sumario_dinamico(dados)
@@ -382,4 +390,3 @@ decisoes = gerar_decisoes_periciais(dados)
 #print(decisoes)
 #print(blocos)
 #print(sumario)
-
