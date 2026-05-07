@@ -47,7 +47,29 @@ def processar_blocos_docx(path_docx: Path, contexto: dict):
 
     doc.save(path_docx)
 
+# Gerar laudo Docx
+def gerar_laudo_docx(out_dir, contexto, decisoes_irregularidades):
+    """
+    Preenche o template .docx com o contexto, aplica blocos condicionais
+    e salva o laudo final.
+    """
+    BASE_DIR = Path(__file__).resolve().parent
+    template_path = BASE_DIR / "templates" / "laudo_modelo.docx"
 
+    output_path = Path(out_dir) / "laudo_pericial.docx"
+
+    contexto_final = {
+        **contexto,
+        **decisoes_irregularidades,
+    }
+
+    doc = DocxTemplate(template_path)
+    doc.render(contexto_final)
+    doc.save(output_path)
+
+    processar_blocos_docx(output_path, contexto_final)
+
+    return output_path
 
 
 # template_path,

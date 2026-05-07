@@ -354,6 +354,19 @@ def montar_sumario_dinamico(dados: dict) -> list[dict]:
 
     return sumario
 
+def gerar_decisoes_irregularidade(dados_dict:dict):
+    # Irregularidades principais
+    decisoes_irregularidades = gerar_decisoes_periciais(dados_dict)
+    # Subdecisões
+    subdecisoes_estornos = gerar_flags_estornos(dados_dict)
+    # Concatenar as subdecisões quando a decisão principal se estiver ativa
+    if decisoes_irregularidades.get("cobranca_indevida_seguros_tarifa"):
+        decisoes_irregularidades = {
+            **decisoes_irregularidades,
+            **subdecisoes_estornos,
+        }
+    return decisoes_irregularidades
+
 # APLICAR - Exemplo:
 dados = {
     "cliente": "Marcelo Honorio",
@@ -379,13 +392,15 @@ dados = {
 }
 
 
-#dados = parametros_contrato
+dados = parametros_contrato
 
-#decisoes = gerar_decisoes_periciais(dados)
-#estornos = gerar_flags_estornos(parametros_contrato)
+decisoes = gerar_decisoes_periciais(dados)
+estornos = gerar_flags_estornos(dados)
 #estrutura = montar_estrutura_laudo(dados) #remontar a os itens e sub itens
 #blocos = montar_blocos_ativos(dados) #remontar a os itens e sub itens
 #sumario = montar_sumario_dinamico(dados)
+
+
 
 #print(decisoes)
 #print(blocos)

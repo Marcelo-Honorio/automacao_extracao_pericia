@@ -170,6 +170,7 @@ def transformar_input_para_contexto(dados_dict: dict, valores_por_arquivo):
         "contratos": contratos
     }
 
-trans_input = transformar_input_para_contexto(parametros_contrato, estornos_por_arquivo)
+#trans_input = transformar_input_para_contexto(parametros_contrato, estornos_por_arquivo)
 
-lista_estorno = definir_estornos(parametros_contrato)
+#lista_estorno = definir_estornos(parametros_contrato)
+
