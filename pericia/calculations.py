@@ -200,15 +200,16 @@ def tx_mensal(df, tx_equivalente):
 
 # Estorno de credito seguindo os inputs da função no codigo ui.py
 def estorno_credito(df, estornos):
-    opcoes_estorno = [
-        ("Seguro Penhor", "seguro_penhor"),
-        ("Seguro de Vida", "seguro_vida"),
-        ("Seguro Agrícola", "seguro_agricola"),
-        ("Juros de Mora", "juros_mora"),
-        ("Tarifa", "tarifa"),
-    ]
-    mapa_estorno = dict(opcoes_estorno)
-    x = [mapa_estorno.get(i) for i in estornos]
+    #opcoes_estorno = [
+    #    ("Seguro Penhor", "seguro_penhor"),
+    #    ("Seguro de Vida", "seguro_vida"),
+    #    ("Seguro Agrícola", "seguro_agricola"),
+    #    ("Juros de Mora", "juros_mora"),
+    #    ("Tarifa", "tarifa"),
+    #]
+    #mapa_estorno = dict(opcoes_estorno)
+    #x = [mapa_estorno.get(i) for i in estornos]
+    x = estornos
     x.append("juros_encarg_add")
 
     resultado = df.apply(
@@ -370,16 +371,16 @@ def juros_acumulado(df):
 
 # Resultado de estorno
 def estorno_resultado(df, estornos):
-    opcoes_estorno = [
-        ("Seguro Penhor", "seguro_penhor"),
-        ("Seguro de Vida", "seguro_vida"),
-        ("Seguro Agrícola", "seguro_agricola"),
-        ("Juros de Mora", "juros_mora"),
-        ("Tarifa", "tarifa"),
-    ]
-    mapa_estorno = dict(opcoes_estorno)
-    x = [mapa_estorno.get(i) for i in estornos]
-
+    #opcoes_estorno = [
+    #    ("seguro_penhor", "Seguro Penhor"),
+    #    ("seguro_vida", "Seguro de Vida"),
+    #    ("seguro_agricola", "Seguro Agrícola"),
+    #    ("juros_mora", "Juros de Mora"),
+    #    ("tarifa", "Tarifa"),
+    #]
+    #mapa_estorno = dict(opcoes_estorno)
+    #x = [mapa_estorno.get(i) for i in estornos]
+    x = estornos
     resultado = (
         df[df.Historico.isin(x)].groupby("Historico")["estorno_credito"].sum().to_dict()
     )

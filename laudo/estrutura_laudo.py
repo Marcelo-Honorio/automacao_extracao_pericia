@@ -392,10 +392,10 @@ dados = {
 }
 
 
-dados = parametros_contrato
+#dados = parametros_contrato
 
-decisoes = gerar_decisoes_periciais(dados)
-estornos = gerar_flags_estornos(dados)
+#decisoes = gerar_decisoes_periciais(dados)
+#estornos = gerar_flags_estornos(dados)
 #estrutura = montar_estrutura_laudo(dados) #remontar a os itens e sub itens
 #blocos = montar_blocos_ativos(dados) #remontar a os itens e sub itens
 #sumario = montar_sumario_dinamico(dados)

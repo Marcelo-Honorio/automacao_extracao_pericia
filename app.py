@@ -182,8 +182,6 @@ def main():
         # Preparar os input do LAUDO
         contexto = transformar_input_para_contexto(parametros_contrato, estornos_por_arquivo)
 
-        
-                
         # Gerar o Laudo
         gerar_laudo_docx(Path(out_root), contexto, )
 
