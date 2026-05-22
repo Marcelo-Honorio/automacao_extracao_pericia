@@ -162,6 +162,7 @@ def main():
     #import pericia.process as process_df
     from laudo.builder import transformar_input_para_contexto
     from laudo.render_docx import gerar_laudo_docx
+    from laudo.estrutura_laudo import gerar_decisoes_periciais
     root = tk.Tk()
     root.withdraw()
 
@@ -182,8 +183,10 @@ def main():
         # Preparar os input do LAUDO
         contexto = transformar_input_para_contexto(parametros_contrato, estornos_por_arquivo)
 
+        decisoes_irregularidades = gerar_decisoes_periciais(parametros_contrato)
+        
         # Gerar o Laudo
-        gerar_laudo_docx(Path(out_root), contexto, )
+        gerar_laudo_docx(Path(out_root), contexto, decisoes_irregularidades)
 
         messagebox.showinfo("Concluído", f"Processamento finalizado!\n\nSaída:\n{out_root}")
     except Exception as e:
