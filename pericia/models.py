@@ -66,7 +66,8 @@ class ParametrosContrato:
     """
     Representa todos os inputs de um contrato/arquivo.
     """
-
+    autor: str
+    instrumento: str
     cliente: str
     agente: str
     contrato: str
@@ -111,6 +112,8 @@ class ParametrosContrato:
         capitalizacao = PremissasCapitalizacao(**cap)
 
         return cls(
+            autor=data.get("autor", ""),
+            instrumento=data.get("instrumento", ""),
             cliente=data.get("cliente", ""),
             agente=data.get("agente", ""),
             contrato=data.get("contrato", ""),

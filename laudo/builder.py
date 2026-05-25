@@ -130,6 +130,8 @@ def transformar_input_para_contexto(dados_dict: dict, valores_por_arquivo):
 
         contrato_item = {
             "arquivo": nome_arquivo,
+            "autor": dados.get("autor", ""),
+            "instrumento": dados.get("instrumento", ""),
             "contrato": dados.get("contrato", ""),
             "valor_liberado": dados.get("valor_liberado", ""),
             "periodo": dados.get("periodo", ""),

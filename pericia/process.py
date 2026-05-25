@@ -1,5 +1,4 @@
 import pandas as pd
-
 import pericia.ui as ui
 import pericia.calculations as cal
 

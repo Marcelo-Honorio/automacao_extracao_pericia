@@ -54,7 +54,7 @@ def gerar_laudo_docx(out_dir, contexto, decisoes_irregularidades):
     e salva o laudo final.
     """
     BASE_DIR = Path(__file__).resolve().parent
-    template_path = BASE_DIR / "templates" / "laudo_modelo.docx"
+    template_path = BASE_DIR / "templates" / "laudo_completo.docx"
 
     output_path = Path(out_dir) / "laudo_pericial.docx"
 

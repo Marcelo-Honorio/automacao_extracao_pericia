@@ -19,9 +19,11 @@ TEMPLATE_ROWS = 7
 # =========================
 
 def preencher_cabecalho(ws, dados):
-
+    op = dados["contrato"]
+    # preenchimento 
     ws["D4"] = dados["juros"]
-
+    ws["B3"] = dados["valor_liberado"]
+    ws["A1"] = f"Recálculo da operação nº {op} - Capitalização Afastada"
 
 # =========================
 # EXPANDIR TABELA
