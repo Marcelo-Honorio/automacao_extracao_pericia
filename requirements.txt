@@ -11,5 +11,6 @@ PyPDF2
 
 docxtpl
 python-docx
+jinja2
 
 requests

@@ -1,11 +1,19 @@
 from pathlib import Path
 from docxtpl import DocxTemplate
 from docx import Document
+from jinja2 import Environment
 import re
+
 
 # TAG de block e end_block
 TAG_BLOCK = re.compile(r"\[\[BLOCK\s+([a-zA-Z0-9_]+)\]\]")
 TAG_END_BLOCK = re.compile(r"\[\[END_BLOCK\]\]")
+
+# Frases com a primeira palavra maiuscula
+def frase_maiuscula(texto):
+    if not texto:
+        return texto
+    return texto[0].upper() + texto[1:]
 
 # Função para remover o paragrafo
 def remover_paragrafo(paragraph):
@@ -63,28 +71,19 @@ def gerar_laudo_docx(out_dir, contexto, decisoes_irregularidades):
         **decisoes_irregularidades,
     }
 
+    # Ambiente Jinja com filtro personalizado
+    jinja_env = Environment()
+    jinja_env.filters["frase_maiuscula"] = frase_maiuscula
+
     doc = DocxTemplate(template_path)
-    doc.render(contexto_final)
+    # Primeira palavra maiúscula
+    doc.render(contexto_final, jinja_env=jinja_env)
     doc.save(output_path)
+    #doc.render(contexto_final)
+    #doc.save(output_path)
 
     processar_blocos_docx(output_path, contexto_final)
 
     return output_path
 
 
-# template_path,
-#def gerar_laudo_docx(out_dir, contexto):
-#    """
-#    Preenche um template .docx com o contexto e salva o arquivo final.
-#    """
-#    BASE_DIR = Path(__file__).resolve().parent
-#    template_path = BASE_DIR / "templates" / "laudo_modelo.docx"
-#
-#    output_path = out_dir / "laudo_pericial.docx"
-#    output_path = Path(output_path)
-
-#    doc = DocxTemplate(template_path)
-#    doc.render(contexto)
-#    doc.save(output_path)
-
-#    return output_path

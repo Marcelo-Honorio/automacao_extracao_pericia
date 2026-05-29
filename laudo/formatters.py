@@ -5,6 +5,10 @@ def fmt_moeda(valor):
     s = f"{valor:,.2f}"
     return s.replace(",", "X").replace(".", ",").replace("X", ".")
 
+# transformar parcelas em string
+def fmt_numero(valor):
+    return f"{int(valor):02d}"
+
 def fmt_percentual(valor):
     if valor is None:
         return ""

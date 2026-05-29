@@ -2,12 +2,12 @@ from laudo.formatters import fmt_moeda
 from laudo.config import OPCOES_ESTORNO, ESTORNOS_MAP
 
 # Função para definir agente de continuidade (agente vem do ui.create_input_with_options())
-def agente_continuidade(agente:str):
+def agente_continuidade(dados_dict:dict):
     #definir agente de continuidade
-    if agente.endswith(("réu", "ré")):
-        return "da operação celebrada"
-    else:
+    if len(dados_dict.items()) > 1:
         return "das operações celebradas"
+    else:
+        return "da operação celebrada"
 
 # Função para definir o produtor ou a produtora (agente vem do ui.create_input_with_options())
 def definir_produtor(agente:str):
@@ -100,6 +100,7 @@ def definir_estornos(dados_dict:dict):
 
 # transforma os input para utilizar no Laudo
 def transformar_input_para_contexto(dados_dict: dict, valores_por_arquivo):
+    import laudo.formatters as f
     
     #quantidade de contratos e operações financeiras
     quant_contrato = definir_n_operacao(dados_dict)
@@ -107,12 +108,13 @@ def transformar_input_para_contexto(dados_dict: dict, valores_por_arquivo):
     operacoes_tx_limite = definir_operacao_12por(dados_dict)
     #estornos 
     estornos = definir_estornos(dados_dict)
+    # continuidade
+    continuidade = agente_continuidade(dados_dict)
     
     contratos = []
     substantivo = None
     agente = None
     cliente = None
-    continuidade = None
     autor = None
     instrumento = None
     
@@ -122,7 +124,6 @@ def transformar_input_para_contexto(dados_dict: dict, valores_por_arquivo):
         if agente is None:
             agente = dados.get("agente", "")
             produtor_a = definir_produtor(dados.get("agente"))
-            continuidade = agente_continuidade(dados.get("agente"))
             substantivo= agente.split()[1].capitalize()
         if cliente is None:
             cliente = dados.get("cliente", "")
@@ -131,18 +132,21 @@ def transformar_input_para_contexto(dados_dict: dict, valores_por_arquivo):
         #    continuidade = dados.get("agente_continuidade", "")
         valores_apurados = valores_por_arquivo.get(nome_arquivo, {})
 
+        # valor para ser utilizado em "valor_parcela"
+        v_parcela = dados.get("valor_parcela", "")
+        # informações dos contrato
         contrato_item = {
             "arquivo": nome_arquivo,
             "autor": dados.get("autor", ""),
             "instrumento": dados.get("instrumento", ""),
             "contrato": dados.get("contrato", ""),
-            "valor_liberado": dados.get("valor_liberado", ""),
+            "valor_liberado": f.fmt_moeda(dados.get("valor_liberado", "")),
             "periodo": dados.get("periodo", ""),
             "estornos": dados.get("estornos", []),
-            "juros": dados.get("juros", ""),
+            "juros": f.fmt_moeda(dados.get("juros", "")),
             "pasta": dados.get("pasta", ""),
-            "valor_parcela": dados.get("valor_parcela", ""),
-            "numero_parcela": dados.get("numero_parcela", ""),
+            "valor_parcela": v_parcela if v_parcela > 0 else "Não pactuado",
+            "numero_parcela": f.fmt_numero(dados.get("numero_parcela", "")),
             "tx_equivalente": dados.get("tx_equivalente", ""),
             "finalidade_op": dados.get("finalidade_op", ""),
             #"agente_continuidade": dados.get("agente_continuidade", ""),
