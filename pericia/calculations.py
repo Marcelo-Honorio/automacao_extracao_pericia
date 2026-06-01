@@ -3,6 +3,25 @@ import re
 import calendar
 from indices.bcb import obter_taxa_por_data
 
+# função base de limpeza antes do cáculo
+def moeda_para_float(valor):
+    if pd.isna(valor):
+        return 0.0
+
+    if isinstance(valor, (int, float)):
+        return float(valor)
+
+    valor = str(valor).strip()
+
+    valor = valor.replace("R$", "").replace(" ", "")
+    valor = valor.replace(".", "").replace(",", ".")
+
+    valor = re.sub(r"[^0-9\.-]", "", valor)
+
+    if valor in ["", "-", ".", "-."]:
+        return 0.0
+
+    return float(valor)
 
 # função pra calcular dias
 def dias(vetor):
@@ -48,6 +67,7 @@ def SN_D(df):
     resultado.fillna(0.00)
     return resultado"""
     dias = df["dias"] / pd.Timedelta(days=1)
+    df["Saldo"] = df["Saldo"].apply(moeda_para_float)
     resultado = df["Saldo"].where(df["Saldo"] < 0, 0) * dias
     return resultado
 

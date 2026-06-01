@@ -52,7 +52,6 @@ def process_df(df, stem):
     parametros_obj.validar()
 
     decisao_cap = decidir_capitalizacao(parametros_obj.capitalizacao)
-
     atualizar_series_por_tx_mercado(parametros_obj.tx_mercado)
 
     # Atualizar apenas as séries necessárias para a taxa escolhida

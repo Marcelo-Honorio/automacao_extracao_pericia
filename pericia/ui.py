@@ -21,7 +21,7 @@ def create_input_with_options(steam: str):
             "numero_parcela": numero_parcela.get(),
             "tx_equivalente": tx_equivalente_var.get(),
             "opcoes_inadimplento": [codigo for codigo, var in vars_inadimplemento.items() if var.get()],
-            "garantia": tipo_garantia.get(),
+            "opcoes_garantias": [codigo for codigo, var in vars_garantias.items() if var.get()],
             "finalidade_op": finalidade_op.get(),
             "Capitalização": {
                 "existe_capitalizacao": existe_cap_var.get() == "Sim",
@@ -166,30 +166,47 @@ def create_input_with_options(steam: str):
         chk.grid(row=i, column=0, sticky="w")
         vars_inadimplemento[codigo] = var_inad
     
-    # Janela de Garantia:
-    ttk.Label(root, text="Garantia(s):", font=font_style).grid(row=14, column=0, sticky="w")
-    tipo_garantia= tk.StringVar(value="Penhor cedular")
-    garantia_combo = ttk.Combobox(root, values=["Aval", "Penhor cedular", "Hipoteca cedular"], textvariable=tipo_garantia, font=font_style)
-    garantia_combo.grid(row=14, column=1, pady=2)
-    
-    # Janela finalidade da operação
-    ttk.Label(root, text="Finalidade da operação:", font=font_style).grid(row=15, column=0, sticky="w")
-    finalidade_op = tk.StringVar(value="")
-    finalidade_op_entry = ttk.Entry(root, textvariable=finalidade_op, font=font_style)
-    finalidade_op_entry.grid(row=15, column=1, pady=2)
-
     # Janela de Taxa de mercado
-    ttk.Label(root, text="Taxa de mercado:", font=font_style).grid(row=16, column=0, sticky="w")
+    ttk.Label(root, text="Taxa de mercado:", font=font_style).grid(row=14, column=0, sticky="w")
     tx_mercado = tk.StringVar(value="Nenhuma")
     serie = ["Nenhuma", "20769 - PF Crédito rural com taxas de mercado", "20770 - PF Crédito rural com taxas reguladas", "Taxa limite - 12%"]
     tx_mercado_var = ttk.Combobox(root,  values=serie, textvariable=tx_mercado, font=font_style)
-    tx_mercado_var.grid(row=16, column=1, pady=2)
+    tx_mercado_var.grid(row=14, column=1, pady=2)
+    
+    # Janela Garantias
+    ttk.Label(root, text="Garantia(s)", font=font_style).grid(row=15, column=0, sticky="w")
+    opcoes_garantias = [
+            ("Aval", "aval"),
+            ("Penhor cedular", "penhor_cedular"),
+            ("Hipoteca cedular", "hipoteca_cedular"),
+        ]
+    frame_garantias = ttk.Frame(root)
+    frame_garantias.grid(row=15, column=1, pady=2, padx=6, sticky="w")
+    vars_garantias = {}
+    for i, (rotulo, codigo) in enumerate(opcoes_garantias):
+        var_gar = tk.BooleanVar(value=False)
+        chk = tk.Checkbutton(
+            frame_garantias,
+            text=rotulo,
+            variable=var_gar,
+            font=font_style,
+            anchor="w",
+            justify="left"
+        )
+        chk.grid(row=i, column=0, sticky="w")
+        vars_garantias[codigo] = var_gar
+    
+    # Janela finalidade da operação
+    ttk.Label(root, text="Finalidade da operação:", font=font_style).grid(row=16, column=0, sticky="w")
+    finalidade_op = tk.StringVar(value="")
+    finalidade_op_entry = ttk.Entry(root, textvariable=finalidade_op, font=font_style)
+    finalidade_op_entry.grid(row=16, column=1, pady=2)
 
     #Existência de capitalização
     existe_cap_var = tk.StringVar(value="Não")
     ttk.Label(root, text="Há cláusula de capitalização?", font=font_style).grid(row=17, column=0, sticky="w")
     ttk.Combobox(root, values=["Sim", "Não"], textvariable=existe_cap_var, font=font_style).grid(row=17, column=1, pady=2)
-
+    
     #Periodicidade de capitalização
     periodicidade_cap_var = tk.StringVar(value="Não informado")
     ttk.Label(root, text="Periodicidade da capitalização:", font=font_style).grid(row=18, column=0, sticky="w")
