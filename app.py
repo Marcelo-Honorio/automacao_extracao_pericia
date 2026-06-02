@@ -38,10 +38,10 @@ def processar_pasta(pasta: Path, out_root: Path):
     xlsx_in = {p.stem: p for p in pasta.glob("*.xlsx") if padrao.search(p.stem)}
 
     # pega XLSX já existentes na pasta de saída (corrigidos)
-    xlsx_out = {p.stem: p for p in out_dir.glob("*.xlsx")}
-
+    # xlsx_out = {p.stem: p for p in out_dir.glob("*.xlsx")} -> SE PRECISAR INCLUIR NO FUTURO OS ARQUIVOS NA PASTA DE SAIDA
+    
     # universo de itens por stem
-    stems = sorted(set(pdfs.keys()) | set(xlsx_in.keys()) | set(xlsx_out.keys()))
+    stems = sorted(set(pdfs.keys()) | set(xlsx_in.keys()))
     if not stems:
         raise RuntimeError("Nenhum PDF ou XLSX encontrado na pasta de entrada ou saída")
 
@@ -54,7 +54,8 @@ def processar_pasta(pasta: Path, out_root: Path):
     for stem in stems:
         try:
             # prioridade: XLSX da saída (corrigido) > XLSX da entrada (manual) > PDF 
-            xlsx_path = xlsx_out.get(stem) or xlsx_in.get(stem)
+            # xlsx_path = xlsx_out.get(stem) or xlsx_in.get(stem) -> SE PRECISAR INCLUIR NO FUTURO OS ARQUIVOS NA PASTA DE SAIDA
+            xlsx_path = xlsx_in.get(stem)
             pdf_path = pdfs.get(stem)
 
             if xlsx_path:
