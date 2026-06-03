@@ -1,5 +1,5 @@
 from laudo.formatters import fmt_moeda
-from laudo.config import OPCOES_ESTORNO, ESTORNOS_MAP
+from laudo.config import OPCOES_ESTORNO, ESTORNOS_MAP, INAD_MAP
 
 # Função para definir agente de continuidade (agente vem do ui.create_input_with_options())
 def agente_continuidade(dados_dict:dict):
@@ -40,6 +40,32 @@ def montar_itens_estorno(estornos_selecionados, valores_apurados):
         })
 
     return itens
+
+# Montar os inadimplementos 
+def montar_itens_inad(inad_selecionados):
+    itens = []
+
+    for nome in inad_selecionados:
+        info = INAD_MAP.get(nome)
+        if not info:
+            continue
+
+        itens.append({
+            "nome": info["rotulo"]
+        })
+
+    return itens
+
+# Montar intens para garantias
+def gerar_flags_garantias(lista_garantias):
+    # Possiveis estornos
+    todos = [
+        "aval",
+        "penhor_cedular",
+        "hipoteca_cedular"
+    ]
+    
+    return {item: item in lista_garantias for item in todos}
 
 # Função para definir operações e operacão (agente vem do ui.create_input_with_options())
 def definir_n_operacao(dados_dict:dict):
@@ -108,6 +134,7 @@ def transformar_input_para_contexto(dados_dict: dict, valores_por_arquivo):
     operacoes_tx_limite = definir_operacao_12por(dados_dict)
     #estornos 
     estornos = definir_estornos(dados_dict)
+    
     # continuidade
     continuidade = agente_continuidade(dados_dict)
     
@@ -148,9 +175,11 @@ def transformar_input_para_contexto(dados_dict: dict, valores_por_arquivo):
             "valor_parcela": v_parcela if v_parcela > 0 else "Não pactuado",
             "numero_parcela": f.fmt_numero(dados.get("numero_parcela", "")),
             "tx_equivalente": dados.get("tx_equivalente", ""),
+            "opcoes_inadimplento": montar_itens_inad(dados.get("opcoes_inadimplento", [])),
+            "opcoes_garantias": gerar_flags_garantias(dados.get("opcoes_garantias")),
             "finalidade_op": dados.get("finalidade_op", ""),
             #"agente_continuidade": dados.get("agente_continuidade", ""),
-            "itens": montar_itens_estorno(
+            "v_estornos": montar_itens_estorno(
                 dados.get("estornos", []),
                 valores_apurados
             )

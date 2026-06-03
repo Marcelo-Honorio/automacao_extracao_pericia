@@ -79,6 +79,8 @@ class ParametrosContrato:
     valor_parcela: float
     numero_parcela: int
     tx_equivalente: str
+    opcoes_inadimplento: list[str]
+    opcoes_garantias: list[str]
     finalidade_op: str
 
     capitalizacao: PremissasCapitalizacao = field(default_factory=PremissasCapitalizacao)
@@ -125,6 +127,8 @@ class ParametrosContrato:
             valor_parcela=float(data.get("valor_parcela", 0) or 0),
             numero_parcela=int(data.get("numero_parcela", 0) or 0),
             tx_equivalente=data.get("tx_equivalente", "diaria"),
+            opcoes_inadimplento=list(data.get("opcoes_inadimplento", [])),
+            opcoes_garantias=list(data.get("opcoes_garantias", [])),
             finalidade_op=data.get("finalidade_op", ""),
             capitalizacao=capitalizacao,
         )

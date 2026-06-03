@@ -60,10 +60,22 @@ def normalizar_texto(valor):
         return ""
     return str(valor).strip().lower()
 
+# Gerar sudecisoes
+#def gerar_subdecisoes_estornos(subdecisoes: list[str]) -> dict:
+#    decisoes = set(subdecisoes or [])
+
+#    return {
+#    }
+
 
 def gerar_decisoes_periciais(dados: dict) -> dict:
     capitalizacao = dados.get("Capitalização", {})
-    estornos = dados.get("estornos", []) or []
+    # lista unica de estornos
+    estornos = list({
+            estorno
+            for valores in dados.values()
+            for estorno in valores.get("estornos", [])
+    })
     inadimplemento = dados.get("opcoes_inadimplento", []) or []
 
     tx_mercado = normalizar_texto(dados.get("tx_mercado"))
@@ -128,7 +140,7 @@ IRREGULARIDADES = {
         bloco="irr_juros_carencia_sem_datas_claras",
         ordem=10,
         regra=lambda d: d["juros_carencia_sem_datas_claras"],
-    ),
+        ),
 
     "encadeamento_operacoes": Irregularidade(
         id="encadeamento_operacoes",
@@ -138,7 +150,7 @@ IRREGULARIDADES = {
         bloco="irr_encadeamento_operacoes",
         ordem=10,
         regra=lambda d: d["encadeamento_operacoes"],
-    ),
+        ),
 
     "taxa_superior_media_mercado": Irregularidade(
         id="taxa_superior_media_mercado",
@@ -148,7 +160,7 @@ IRREGULARIDADES = {
         bloco="irr_taxa_superior_media_mercado",
         ordem=10,
         regra=lambda d: d["taxa_superior_media_mercado"],
-    ),
+        ),
 
     "juros_superiores_plano_safra": Irregularidade(
         id="juros_superiores_plano_safra",
@@ -158,7 +170,7 @@ IRREGULARIDADES = {
         bloco="irr_juros_superiores_plano_safra",
         ordem=20,
         regra=lambda d: d["juros_superiores_plano_safra"],
-    ),
+        ),
 
     "juros_superiores_12_aa_credito_rural": Irregularidade(
         id="juros_superiores_12_aa_credito_rural",
@@ -168,7 +180,7 @@ IRREGULARIDADES = {
         bloco="irr_juros_superiores_12_aa_credito_rural",
         ordem=30,
         regra=lambda d: d["juros_superiores_12_aa_credito_rural"],
-    ),
+        ),
 
     "cdi_com_substituicao_indevida": Irregularidade(
         id="cdi_com_substituicao_indevida",
@@ -178,7 +190,7 @@ IRREGULARIDADES = {
         bloco="irr_cdi_com_substituicao_indevida",
         ordem=40,
         regra=lambda d: d["cdi_com_substituicao_indevida"],
-    ),
+        ),
 
     "cdi_como_encargo_remuneratorio": Irregularidade(
         id="cdi_como_encargo_remuneratorio",
@@ -188,7 +200,7 @@ IRREGULARIDADES = {
         bloco="irr_cdi_como_encargo_remuneratorio",
         ordem=50,
         regra=lambda d: d["cdi_como_encargo_remuneratorio"],
-    ),
+        ),
 
     "taxa_superior_contrato_originario": Irregularidade(
         id="taxa_superior_contrato_originario",
@@ -198,7 +210,7 @@ IRREGULARIDADES = {
         bloco="irr_taxa_superior_contrato_originario",
         ordem=60,
         regra=lambda d: d["taxa_superior_contrato_originario"],
-    ),
+        ),
 
     "capitalizacao_sem_pactuacao": Irregularidade(
         id="capitalizacao_sem_pactuacao",
@@ -208,7 +220,7 @@ IRREGULARIDADES = {
         bloco="irr_capitalizacao_sem_pactuacao",
         ordem=10,
         regra=lambda d: d["capitalizacao_sem_pactuacao"],
-    ),
+        ),
 
     "periodicidade_capitalizacao_rural": Irregularidade(
         id="periodicidade_capitalizacao_rural",
@@ -218,7 +230,7 @@ IRREGULARIDADES = {
         bloco="irr_periodicidade_capitalizacao_rural",
         ordem=20,
         regra=lambda d: d["periodicidade_capitalizacao_rural"],
-    ),
+        ),
 
     "capitalizacao_anual_sem_pactuacao": Irregularidade(
         id="capitalizacao_anual_sem_pactuacao",
@@ -228,7 +240,7 @@ IRREGULARIDADES = {
         bloco="irr_capitalizacao_anual_sem_pactuacao",
         ordem=30,
         regra=lambda d: d["capitalizacao_anual_sem_pactuacao"],
-    ),
+        ),
 
     "cobranca_indevida_seguros_tarifa": Irregularidade(
         id="cobranca_indevida_seguros_tarifa",
@@ -238,7 +250,7 @@ IRREGULARIDADES = {
         bloco="irr_cobranca_indevida_seguros_tarifa",
         ordem=10,
         regra=lambda d: d["cobranca_indevida_seguros_tarifa"],
-    ),
+        ),
 
     "inadimplemento_ilegal_oneroso": Irregularidade(
         id="inadimplemento_ilegal_oneroso",
@@ -248,7 +260,7 @@ IRREGULARIDADES = {
         bloco="irr_inadimplemento_ilegal_oneroso",
         ordem=10,
         regra=lambda d: d["inadimplemento_ilegal_oneroso"],
-    ),
+        ),
 }
 
 # Funções para montar estrutura
@@ -366,33 +378,6 @@ def gerar_decisoes_irregularidade(dados_dict:dict):
             **subdecisoes_estornos,
         }
     return decisoes_irregularidades
-
-# APLICAR - Exemplo:
-dados = {
-    "cliente": "Marcelo Honorio",
-    "agente": "do réu",
-    "contrato": "40/12469",
-    "valor_liberado": 10000.0,
-    "periodo": "mensal",
-    "estornos": ["seguro_penhor", "tarifa"],
-    "juros": 12.0,
-    "tx_mercado": "Nenhuma",
-    "valor_parcela": 1200.0,
-    "numero_parcela": 5,
-    "tx_equivalente": "base30",
-    "opcoes_inadimplento": ["remuneratorio_mora_a.m", "multa_2_por"],
-    "garantia": "Penhor cedular",
-    "finalidade_op": "Custeio",
-    "Capitalização": {
-        "existe_capitalizacao": True,
-        "periodicidade_capitalizacao": "mensal",
-        "taxa_anual_supera_duodecuplo": None,
-        "regime_capitalizacao": "Não informado",
-    },
-}
-
-
-#dados = parametros_contrato
 
 #decisoes = gerar_decisoes_periciais(dados)
 #estornos = gerar_flags_estornos(dados)
