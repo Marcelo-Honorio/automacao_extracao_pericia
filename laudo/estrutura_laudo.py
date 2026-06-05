@@ -60,14 +60,6 @@ def normalizar_texto(valor):
         return ""
     return str(valor).strip().lower()
 
-# Gerar sudecisoes
-#def gerar_subdecisoes_estornos(subdecisoes: list[str]) -> dict:
-#    decisoes = set(subdecisoes or [])
-
-#    return {
-#    }
-
-
 def gerar_decisoes_periciais(dados: dict) -> dict:
     capitalizacao = dados.get("Capitalização", {})
     # lista unica de estornos

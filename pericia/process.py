@@ -74,6 +74,8 @@ def process_df(df, stem):
 
     # estornos escolhidos pelo usuário
     df.loc[:, 'estorno_credito'] = cal.estorno_credito(df, estornos=parametros_obj.estornos)
+
+    df = cal.historico_estorno(df, decisao_cap)
     # regra adicional por decisão de capitalização
     # Aqui você escolhe a estratégia:
     # 1) simples: recalcula sem capitalização

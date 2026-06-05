@@ -108,7 +108,7 @@ def processar_pasta(pasta: Path, out_root: Path):
             # AQUI entra o cálculo de pericia
             # =============================
             df_process, parametros, estorno_apurado  = process_df(df, stem)
-            salvar_resultados(df_process, parametros, out_dir, stem) #Salvando os resultados da pericia
+            salvar_resultados(df_process, parametros, out_dir, stem) #Salvando os resultados da pericia (CORRIGIR ESSE PONTO)
 
             # salvar os parametros de todos os contratos
             parametros_contrato[stem] = parametros
@@ -117,7 +117,8 @@ def processar_pasta(pasta: Path, out_root: Path):
             # =============================
             # AQUI os ANEXOS EXCEL
             # =============================
-            gerar_relatorio(df_process, parametros)
+            df_process["Historico"] = df["Historico"]
+            gerar_relatorio(df_process, parametros, stem, out_dir)
 
             # consolida
             df2 = df_process.copy()
@@ -163,7 +164,7 @@ def main():
     #import pericia.process as process_df
     from laudo.builder import transformar_input_para_contexto
     from laudo.render_docx import gerar_laudo_docx
-    from laudo.estrutura_laudo import gerar_decisoes_periciais
+    from laudo.estrutura_laudo import gerar_decisoes_irregularidade # gerar_decisoes_periciais
     root = tk.Tk()
     root.withdraw()
 
@@ -184,11 +185,12 @@ def main():
         # Preparar os input do LAUDO
         contexto = transformar_input_para_contexto(parametros_contrato, estornos_por_arquivo)
 
-        decisoes_irregularidades = gerar_decisoes_periciais(parametros_contrato)
+        decisoes_irregularidades = gerar_decisoes_irregularidade(parametros_contrato)
         
         # Gerar o Laudo
         gerar_laudo_docx(Path(out_root), contexto, decisoes_irregularidades)
 
+      
         messagebox.showinfo("Concluído", f"Processamento finalizado!\n\nSaída:\n{out_root}")
     except Exception as e:
         messagebox.showerror("Erro", str(e))

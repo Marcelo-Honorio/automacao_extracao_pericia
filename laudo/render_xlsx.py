@@ -13,7 +13,6 @@ SHEET = "ANEXO 2"
 START_ROW = 13
 TEMPLATE_ROWS = 7
 
-
 # =========================
 # PREENCHER CABEÇALHO
 # =========================
@@ -21,7 +20,7 @@ TEMPLATE_ROWS = 7
 def preencher_cabecalho(ws, dados):
     op = dados["contrato"]
     # preenchimento 
-    ws["D4"] = dados["juros"]
+    ws["D4"] = dados["juros"]/100
     ws["B3"] = dados["valor_liberado"]
     ws["A1"] = f"Recálculo da operação nº {op} - Capitalização Afastada"
 
@@ -57,8 +56,9 @@ def copiar_formatacao(ws, n_linhas):
 # =========================
 # PREENCHER TABELA
 # =========================
-
 def preencher_tabela(ws, df):
+
+    #df.loc[:, 'Historico_estorno'] = historico_estorno(df, estornos=dados["estorno"])
 
     for i, row in df.iterrows():
 
@@ -77,13 +77,13 @@ def preencher_tabela(ws, df):
         ws.cell(r, 12, row["juros"])
         ws.cell(r, 13, row["tx_mensal"])
         ws.cell(r, 14, row["tx_anual"]) ### corrigir p/ incluir tx de mercado
-        ws.cell(r, 15, row["Historico"])
+        ws.cell(r, 15, row['historico_estorno'])
         ws.cell(r, 16, row["debito_recal"])
         ws.cell(r, 17, row["estorno_credito"])
         ws.cell(r, 18, row["saldo_recal"])
-        ws.cell(r, 19, row["snd"])
-        ws.cell(r, 20, row["sna"])
-        ws.cell(r, 21, row["snm"])
+        ws.cell(r, 19, row["SND"])
+        ws.cell(r, 20, row["SNA"])
+        ws.cell(r, 21, row["SNM"])
         ws.cell(r, 22, row["juros_recal"])
 
 # =========================
@@ -100,12 +100,13 @@ def preencher_tabela(ws, df):
 # FUNÇÃO PRINCIPAL
 # =========================
 
-def gerar_relatorio(df, dados_cabecalho):
+def gerar_relatorio(df, dados, stem, out_dir):
 
+    # Gerar relatorio 
     wb = load_workbook(TEMPLATE)
     ws = wb[SHEET]
 
-    preencher_cabecalho(ws, dados_cabecalho)
+    preencher_cabecalho(ws, dados)
 
     expandir_tabela(ws, len(df))
 
@@ -114,5 +115,6 @@ def gerar_relatorio(df, dados_cabecalho):
     preencher_tabela(ws, df)
 
     #preencher_resumo(ws, resumo)
+    out_xlsx = out_dir / f"{stem}.xlsx"
 
-    wb.save("relatorio_final.xlsx")
+    wb.save(out_xlsx)

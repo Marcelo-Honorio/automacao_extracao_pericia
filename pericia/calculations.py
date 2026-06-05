@@ -237,6 +237,47 @@ def estorno_credito(df, estornos):
     )
     return resultado
 
+# Função para Historico de Estorno 
+def historico_estorno(df, decisao):
+    fund = "Não foi identificada cláusula expressa de capitalização de juros."
+    ob_laudo = "Os encargos devem ser tratados sem capitalização contratualmente pactuada."
+
+    estorno_ad = None
+    estorno_inad = None
+
+    if decisao.observacoes_laudo == ob_laudo:
+        estorno_ad = "JUROS RECALCULADOS SEM CAPITALIZAÇÃO"
+
+    if decisao.fundamentos == fund:
+        estorno_inad = "DESCARACTERIZAÇÃO DA MORA"
+
+    df = df.copy()
+
+    # Define período: até Trans_saldo = adimplemento; depois = inadimplemento
+    df["periodo_estorno"] = "inadimplemento"
+
+    if df["Historico"].eq("trans_saldo").any():
+        idx_trans_saldo = df.index[df["Historico"].eq("trans_saldo")][0]
+        df.loc[:idx_trans_saldo, "periodo_estorno"] = "adimplemento"
+
+    def montar_historico(row):
+        historico = str(row.get("Historico", "")).strip()
+        estorno = row.get("estorno_credito", "")
+
+        if pd.isna(estorno) or float(estorno) >= 0:
+            return historico
+
+        if row["periodo_estorno"] == "adimplemento" and estorno_ad:
+            return f"Estorno {historico} {estorno_ad}"
+
+        if row["periodo_estorno"] == "inadimplemento" and estorno_inad:
+            return f"Estorno {historico} {estorno_inad}"
+
+        return historico
+
+    df["historico_estorno"] = df.apply(montar_historico, axis=1)
+
+    return df
 
 # Função para recalcular o saldo final, snd, sna, snm, juros_recal, juros_acumulado
 def saldo_recalculado(df):
