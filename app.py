@@ -2,6 +2,28 @@ from pathlib import Path
 #from datetime import datetime
 import tkinter as tk
 from tkinter import filedialog, messagebox
+import re
+
+# função para restaurar o historico dos estornos que foram normalizados
+def restaurar_historico_original(df):
+
+    def ajustar(row):
+        texto = row["historico_estorno"]
+
+        if not texto:
+            return texto
+
+        historico_original = str(row["Historico"]).strip()
+
+        return re.sub(
+            r"Estorno\s+'[^']+'",
+            f"Estorno '{historico_original}'",
+            texto
+        )
+
+    df["historico_estorno"] = df.apply(ajustar, axis=1)
+
+    return df
 
 def gerar_template_manual_xlsx(path_out: Path):
     """
@@ -117,7 +139,8 @@ def processar_pasta(pasta: Path, out_root: Path):
             # =============================
             # AQUI os ANEXOS EXCEL
             # =============================
-            df_process["Historico"] = df["Historico"]
+            df_process["Historico"] = df["Historico"].str.upper()
+            df_process = restaurar_historico_original(df_process)
             gerar_relatorio(df_process, parametros, stem, out_dir)
 
             # consolida
@@ -179,7 +202,7 @@ def main():
         return
 
     try:
-        _, _, parametros_contrato, estornos_por_arquivo = processar_pasta(Path(pasta), Path(out_root))
+        _, df, parametros_contrato, estornos_por_arquivo = processar_pasta(Path(pasta), Path(out_root))
         #df_all.to_excel(out_dir / "dfs_consolidado.xlsx", index=False)
 
         # Preparar os input do LAUDO

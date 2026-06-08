@@ -219,7 +219,7 @@ def tx_mensal(df, tx_equivalente):
 
 
 # Estorno de credito seguindo os inputs da função no codigo ui.py
-def estorno_credito(df, estornos):
+def estorno_credito(df, estornos, decisao):
     #opcoes_estorno = [
     #    ("Seguro Penhor", "seguro_penhor"),
     #    ("Seguro de Vida", "seguro_vida"),
@@ -229,9 +229,12 @@ def estorno_credito(df, estornos):
     #]
     #mapa_estorno = dict(opcoes_estorno)
     #x = [mapa_estorno.get(i) for i in estornos]
-    x = estornos
-    x.append("juros_encarg_add")
+    estornos = set(estornos)
 
+    if not decisao.capitalizacao_valida:
+        estornos.update({"multa", "juros_mora", "juros_encarg_add"})
+
+    x = list(estornos)
     resultado = df.apply(
         lambda row: row["Debito"] if (row["Historico"] in x) else 0, axis=1
     )
@@ -239,39 +242,64 @@ def estorno_credito(df, estornos):
 
 # Função para Historico de Estorno 
 def historico_estorno(df, decisao):
+    ## Historicos para descapitalização
+    HISTORICOS_MORA = {
+        "juros_encarg_add",
+        "juros_mora",
+        "multa"
+    }
+
     fund = "Não foi identificada cláusula expressa de capitalização de juros."
     ob_laudo = "Os encargos devem ser tratados sem capitalização contratualmente pactuada."
 
     estorno_ad = None
     estorno_inad = None
 
-    if decisao.observacoes_laudo == ob_laudo:
+    if decisao.observacoes_laudo[0] == ob_laudo:
         estorno_ad = "JUROS RECALCULADOS SEM CAPITALIZAÇÃO"
 
-    if decisao.fundamentos == fund:
+    if decisao.fundamentos[0] == fund:
         estorno_inad = "DESCARACTERIZAÇÃO DA MORA"
 
     df = df.copy()
-
-    # Define período: até Trans_saldo = adimplemento; depois = inadimplemento
     df["periodo_estorno"] = "inadimplemento"
 
     if df["Historico"].eq("trans_saldo").any():
         idx_trans_saldo = df.index[df["Historico"].eq("trans_saldo")][0]
         df.loc[:idx_trans_saldo, "periodo_estorno"] = "adimplemento"
+    
+    idx_ultimo_adimplemento = None
+
+    if df["periodo_estorno"].eq("adimplemento").any():
+        idx_ultimo_adimplemento = df.index[df["periodo_estorno"].eq("adimplemento")][-1]
 
     def montar_historico(row):
         historico = str(row.get("Historico", "")).strip()
-        estorno = row.get("estorno_credito", "")
 
-        if pd.isna(estorno) or float(estorno) >= 0:
-            return historico
+        try:
+            estorno = float(row.get("estorno_credito", 0) or 0)
+        except (TypeError, ValueError):
+            estorno = 0
 
-        if row["periodo_estorno"] == "adimplemento" and estorno_ad:
-            return f"Estorno {historico} {estorno_ad}"
+        # Só altera quando estorno_credito for maior que zero
+        if estorno <= 0:
+            return None
+        # Final da Normalidade (NO FUTURO ISSO DEVE SER MELHORADO)
+        if (
+            row.name == idx_ultimo_adimplemento
+            and row["periodo_estorno"] == "adimplemento"
+        ):
+            return f"Estorno '{historico}'/JUROS RECALC. S/ CAP. E CAP. AO FIM DO PERÍODO DE NORMALIDADE"
 
-        if row["periodo_estorno"] == "inadimplemento" and estorno_inad:
-            return f"Estorno {historico} {estorno_inad}"
+        if row["periodo_estorno"] == "adimplemento":
+            if historico in HISTORICOS_MORA and estorno_ad:
+                return f"Estorno '{historico}'/{estorno_ad}"
+            return f"Estorno '{historico}'"
+
+        if row["periodo_estorno"] == "inadimplemento":
+            if historico in HISTORICOS_MORA and estorno_inad:
+                return f"Estorno '{historico}'/{estorno_inad}"
+            return f"Estorno '{historico}'"
 
         return historico
 
@@ -441,9 +469,9 @@ def estorno_resultado(df, estornos):
     #]
     #mapa_estorno = dict(opcoes_estorno)
     #x = [mapa_estorno.get(i) for i in estornos]
-    x = estornos
+    x = [item for item in estornos if item != "juros_encarg_add"]
     resultado = (
-        df[df.Historico.isin(x)].groupby("Historico")["estorno_credito"].sum().to_dict()
+        df[df.Historico.isin(x)].groupby("Historico")["Debito"].sum().to_dict()
     )
 
     return resultado

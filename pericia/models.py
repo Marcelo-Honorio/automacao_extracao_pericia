@@ -9,15 +9,14 @@ PeriodicidadeCapitalizacao = Literal[
     "anual",
     "diaria",
     "semestral",
-    "cobranca_unica",
-    "omissa",
+    "Não informado",
 ]
 # Listas com os regimes de capitalização
 RegimeCapitalizacao = Literal[
     "simples",
     "composto",
     "omisso",
-    "nao_informado",
+    "Não informado",
 ]
 
 @dataclass(slots=True)
@@ -110,7 +109,7 @@ class ParametrosContrato:
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "ParametrosContrato":
-        cap = data.get("capitalizacao", {}) or {}
+        cap = data.get('Capitalização', {}) or {}
         capitalizacao = PremissasCapitalizacao(**cap)
 
         return cls(

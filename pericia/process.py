@@ -73,7 +73,7 @@ def process_df(df, stem):
     df.loc[:, 'tx_mensal'] = cal.tx_mensal(df, tx_equivalente=parametros_obj.tx_equivalente)
 
     # estornos escolhidos pelo usuário
-    df.loc[:, 'estorno_credito'] = cal.estorno_credito(df, estornos=parametros_obj.estornos)
+    df.loc[:, 'estorno_credito'] = cal.estorno_credito(df, estornos=parametros_obj.estornos, decisao=decisao_cap)
 
     df = cal.historico_estorno(df, decisao_cap)
     # regra adicional por decisão de capitalização
