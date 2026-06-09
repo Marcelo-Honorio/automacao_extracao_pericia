@@ -268,10 +268,10 @@ def historico_estorno(df, decisao):
         idx_trans_saldo = df.index[df["Historico"].eq("trans_saldo")][0]
         df.loc[:idx_trans_saldo, "periodo_estorno"] = "adimplemento"
     
-    idx_ultimo_adimplemento = None
+    #idx_ultimo_adimplemento = None
 
-    if df["periodo_estorno"].eq("adimplemento").any():
-        idx_ultimo_adimplemento = df.index[df["periodo_estorno"].eq("adimplemento")][-1]
+    #if df["periodo_estorno"].eq("adimplemento").any():
+    #    idx_ultimo_adimplemento = df.index[df["periodo_estorno"].eq("adimplemento")][-1]
 
     def montar_historico(row):
         historico = str(row.get("Historico", "")).strip()
@@ -285,11 +285,11 @@ def historico_estorno(df, decisao):
         if estorno <= 0:
             return None
         # Final da Normalidade (NO FUTURO ISSO DEVE SER MELHORADO)
-        if (
-            row.name == idx_ultimo_adimplemento
-            and row["periodo_estorno"] == "adimplemento"
-        ):
-            return f"Estorno '{historico}'/JUROS RECALC. S/ CAP. E CAP. AO FIM DO PERÍODO DE NORMALIDADE"
+        #if (
+        #    row.name == idx_ultimo_adimplemento
+        #    and row["periodo_estorno"] == "adimplemento"
+        #):
+        #    return f"Estorno '{historico}'/JUROS RECALC. S/ CAP. E CAP. AO FIM DO PERÍODO DE NORMALIDADE"
 
         if row["periodo_estorno"] == "adimplemento":
             if historico in HISTORICOS_MORA and estorno_ad:

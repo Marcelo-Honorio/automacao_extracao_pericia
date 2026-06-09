@@ -41,7 +41,7 @@ def decidir_capitalizacao(p: PremissasCapitalizacao) -> DecisaoCapitalizacao:
         )
 
     # 2) Existe cláusula, mas sem periodicidade
-    if p.periodicidade_capitalizacao in (None, "omissa"):
+    if p.periodicidade_capitalizacao in (None, "Não informado"):
         fundamentos.append("Há referência à capitalização, porém sem periodicidade expressa.")
         observacoes.append("A ausência de periodicidade compromete a validade técnica da capitalização.")
         return DecisaoCapitalizacao(
@@ -53,7 +53,7 @@ def decidir_capitalizacao(p: PremissasCapitalizacao) -> DecisaoCapitalizacao:
         )
 
     # 3) Existe cláusula e periodicidade, mas o regime está omisso
-    if p.regime_capitalizacao in (None, "omisso", "nao_informado"):
+    if p.regime_capitalizacao in (None, "omisso", "Não informado"):
         fundamentos.append("O contrato não esclarece se o regime é simples ou composto.")
         observacoes.append("Sem definição do regime, a adoção do método composto fica tecnicamente fragilizada.")
         return DecisaoCapitalizacao(
