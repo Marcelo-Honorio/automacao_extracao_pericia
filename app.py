@@ -2,23 +2,25 @@ from pathlib import Path
 #from datetime import datetime
 import tkinter as tk
 from tkinter import filedialog, messagebox
+import pandas as pd
 import re
 
 # função para restaurar o historico dos estornos que foram normalizados
 def restaurar_historico_original(df):
+    df = df.copy()
 
     def ajustar(row):
-        texto = row["historico_estorno"]
+        texto = row.get("historico_estorno")
 
-        if not texto:
+        if pd.isna(texto) or not texto:
             return texto
 
-        historico_original = str(row["Historico"]).strip()
+        historico_original = str(row.get("Historico", "")).strip()
 
         return re.sub(
-            r"Estorno\s+'[^']+'",
-            f"Estorno '{historico_original}'",
-            texto
+            r"^Estorno\s+'[^']+'(.*)$",
+            rf"Estorno '{historico_original}'\1",
+            str(texto)
         )
 
     df["historico_estorno"] = df.apply(ajustar, axis=1)
@@ -213,7 +215,6 @@ def main():
         # Gerar o Laudo
         gerar_laudo_docx(Path(out_root), contexto, decisoes_irregularidades)
 
-      
         messagebox.showinfo("Concluído", f"Processamento finalizado!\n\nSaída:\n{out_root}")
     except Exception as e:
         messagebox.showerror("Erro", str(e))

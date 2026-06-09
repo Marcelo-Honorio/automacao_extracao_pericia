@@ -242,68 +242,104 @@ def estorno_credito(df, estornos, decisao):
 
 # Função para Historico de Estorno 
 def historico_estorno(df, decisao):
-    ## Historicos para descapitalização
+    """
+    Cria a coluna 'historico_estorno' apenas para linhas com estorno_credito > 0.
+    Até 'trans_saldo' = adimplemento.
+    Depois de 'trans_saldo' = inadimplemento.
+    """
+
     HISTORICOS_MORA = {
         "juros_encarg_add",
         "juros_mora",
-        "multa"
+        "multa",
     }
 
-    fund = "Não foi identificada cláusula expressa de capitalização de juros."
-    ob_laudo = "Os encargos devem ser tratados sem capitalização contratualmente pactuada."
+    """
+    No futuro preciso aprimorar a logica para os fundamentos e observações criados pela 
+    função  decidir_capitalizacao()
+    """
 
-    estorno_ad = None
-    estorno_inad = None
+    #fund = "Não foi identificada cláusula expressa de capitalização de juros." 
+    #ob_laudo = "Os encargos devem ser tratados sem capitalização contratualmente pactuada."
 
-    if decisao.observacoes_laudo[0] == ob_laudo:
+    #estorno_ad = None
+    #estorno_inad = None
+
+    if getattr(decisao, "observacoes_laudo", []) and len(decisao.observacoes_laudo) > 0:
         estorno_ad = "JUROS RECALCULADOS SEM CAPITALIZAÇÃO"
 
-    if decisao.fundamentos[0] == fund:
+    if getattr(decisao, "fundamentos", []) and len(decisao.fundamentos) > 0:
         estorno_inad = "DESCARACTERIZAÇÃO DA MORA"
 
     df = df.copy()
+
+    df["historico_norm"] = (
+        df["Historico"]
+        .astype(str)
+        .str.strip()
+        .str.lower()
+    )
+
     df["periodo_estorno"] = "inadimplemento"
 
-    if df["Historico"].eq("trans_saldo").any():
-        idx_trans_saldo = df.index[df["Historico"].eq("trans_saldo")][0]
+    if df["historico_norm"].eq("trans_saldo").any():
+        idx_trans_saldo = df.index[df["historico_norm"].eq("trans_saldo")][0]
         df.loc[:idx_trans_saldo, "periodo_estorno"] = "adimplemento"
-    
-    #idx_ultimo_adimplemento = None
-
-    #if df["periodo_estorno"].eq("adimplemento").any():
-    #    idx_ultimo_adimplemento = df.index[df["periodo_estorno"].eq("adimplemento")][-1]
 
     def montar_historico(row):
-        historico = str(row.get("Historico", "")).strip()
+        historico_original = str(row.get("Historico", "")).strip()
+        historico_norm = str(row.get("historico_norm", "")).strip()
 
         try:
             estorno = float(row.get("estorno_credito", 0) or 0)
         except (TypeError, ValueError):
             estorno = 0
 
-        # Só altera quando estorno_credito for maior que zero
         if estorno <= 0:
             return None
-        # Final da Normalidade (NO FUTURO ISSO DEVE SER MELHORADO)
-        #if (
-        #    row.name == idx_ultimo_adimplemento
-        #    and row["periodo_estorno"] == "adimplemento"
-        #):
-        #    return f"Estorno '{historico}'/JUROS RECALC. S/ CAP. E CAP. AO FIM DO PERÍODO DE NORMALIDADE"
 
         if row["periodo_estorno"] == "adimplemento":
-            if historico in HISTORICOS_MORA and estorno_ad:
-                return f"Estorno '{historico}'/{estorno_ad}"
-            return f"Estorno '{historico}'"
+            if historico_norm in HISTORICOS_MORA and estorno_ad:
+                return f"Estorno '{historico_original}'/{estorno_ad}"
+            return f"Estorno '{historico_original}'"
 
         if row["periodo_estorno"] == "inadimplemento":
-            if historico in HISTORICOS_MORA and estorno_inad:
-                return f"Estorno '{historico}'/{estorno_inad}"
-            return f"Estorno '{historico}'"
+            if historico_norm in HISTORICOS_MORA and estorno_inad:
+                return f"Estorno '{historico_original}'/{estorno_inad}"
+            return f"Estorno '{historico_original}'"
 
-        return historico
+        return None
 
     df["historico_estorno"] = df.apply(montar_historico, axis=1)
+
+    df = df.drop(columns=["historico_norm"])
+
+    return df
+
+# incluir "JUROS RECALC. S/ CAP. E CAP. AO FIM DO PERÍODO DE NORMALIDADE"
+def incluir_historico_final_normalidade(df):
+    """
+    No futuro essa função terá que levar em consideração os dados da decisao
+    """
+    df = df.copy()
+
+    texto_final = "JUROS RECALC. S/ CAP. E CAP. AO FIM DO PERÍODO DE NORMALIDADE"
+
+    mask = (
+        df["periodo_estorno"].eq("adimplemento")
+        & df["estorno_credito"].fillna(0).astype(float).gt(0)
+    )
+
+    if not mask.any():
+        return df
+
+    idx_ultimo_ad = df.index[mask][-1]
+
+    historico = str(df.loc[idx_ultimo_ad, "Historico"]).strip()
+
+    df.loc[idx_ultimo_ad, "historico_estorno"] = (
+        f"Estorno '{historico}'/{texto_final}"
+    )
 
     return df
 
