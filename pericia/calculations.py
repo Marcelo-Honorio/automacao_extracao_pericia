@@ -344,12 +344,13 @@ def incluir_historico_final_normalidade(df):
     return df
 
 # Função para recalcular o saldo final, snd, sna, snm, juros_recal, juros_acumulado
-def saldo_recalculado(df):
+def saldo_recalculado(df, tx_mercado_opcao="Nenhuma"):
     # Trocar os NA po 0 nas colunas de crédito e debito
     df["Credito"] = df["Credito"].fillna(0)
     df["Debito"] = df["Debito"].fillna(0)
 
     p = df[df.Historico == "trans_saldo"].index[0]
+
     valor = 0
     x = 0
     a = 0
@@ -357,20 +358,27 @@ def saldo_recalculado(df):
     snd = []
     sna = []
     snm = []
-    taxa_mercado = 0.1
     juros_recal = []
     juros_acumulado = []
-    ## loop antes do transferencia de saldo
+
+    def obter_taxa_aplicada(i):
+        if tx_mercado_opcao == "Nenhuma":
+            return df["tx_mensal"][i]
+
+        if tx_mercado_opcao == "Taxa limite - 12%":
+            return (1 + 0.12) ** (1 / 12) - 1
+
+        return df["tx_mercado"][i]
+
     for i in df[: p - 1].index:
-        # calculando o novo saldo
         valor = valor - df["Debito"][i] + df["Credito"][i] + df["estorno_credito"][i]
         saldo.append(valor)
-        # novo SND
+
         if valor < 0:
             snd.append(valor * (df.loc[i, "dias"] / pd.Timedelta(days=1)))
         else:
             snd.append(0)
-        # novo SNA
+
         if i > 0:
             if df["Historico"][i] == "juros_encarg_add":
                 x = snd[i]
@@ -380,63 +388,54 @@ def saldo_recalculado(df):
                 sna.append(x)
         else:
             sna.append(0)
-        # novo SNM
+
         if df.Historico[i] == "juros_encarg_add":
             dias_acum_ = df.loc[i - 1, "dias_acum"] / pd.Timedelta(days=1)
             snm.append(sna[i - 1] / dias_acum_)
         else:
             snm.append(0)
 
-        # Função para o novo recalculo do juros
         def recalculo_juros(indice):
             i = indice
-            if df["tx_mensal"][i] <= taxa_mercado:
-                dias_acum_ = df.loc[i - 1, "dias_acum"] / pd.Timedelta(days=1)
-                x = (((1 + df["tx_mensal"][i]) ** (dias_acum_ / 30)) - 1) * snm[i]
-                # juros_recal.append(x)
-            else:
-                dias_acum_ = df.loc[i - 1, "dias_acum"] / pd.Timedelta(days=1)
-                x = (((1 + taxa_mercado) ** (dias_acum_ / 30)) - 1) * snm[i]
-                # juros_recal.append(x)
-            return x
+            dias_acum_ = df.loc[i - 1, "dias_acum"] / pd.Timedelta(days=1)
+            taxa_aplicada = obter_taxa_aplicada(i)
 
-        # Novo calculo de juros recalculado
+            return (((1 + taxa_aplicada) ** (dias_acum_ / 30)) - 1) * snm[i]
+
         if snm[i] < 0:
             juros_recal.append(recalculo_juros(i))
         else:
             juros_recal.append(0)
-        # Novo juros acumulado
+
         if i > 0:
             a = juros_acumulado[i - 1] + juros_recal[i]
             juros_acumulado.append(a)
         else:
             juros_acumulado.append(0)
 
-    # Calcular a ultima linha
     p = len(snm)
     dias_acum_ = df.loc[p - 1, "dias_acum"] / pd.Timedelta(days=1)
     snm.append(sna[p - 1] / dias_acum_)
-    # Calcular a ultima linha do juros recalculo
+
     if snm[p] < 0:
         juros_recal.append(recalculo_juros(p))
     else:
         juros_recal.append(0)
-    # Calcular a ultima linha do juros acumulado
+
     juros_acumulado.append(juros_acumulado[p - 1] + juros_recal[p])
 
-    valor = valor = (
+    valor = (
         valor
         - df["Debito"][i]
         + df["Credito"][i]
         + df["estorno_credito"][i]
         + juros_acumulado[p]
     )
+
     saldo.append(valor)
-    # adicionar o ultimo valor em sna e snd
     sna.append(0)
     snd.append(0)
 
-    # Resultado
     result = pd.DataFrame(
         {
             "Saldo": saldo,

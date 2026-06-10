@@ -18,8 +18,10 @@ def read_table_from_file(file_path):
         print(f"Erro ao ler o arquivo {file_path}: {e}")
 
 
-def process_df(df, stem):
+def process_df(df, stem, parent=None):
     #print(f"Processando arquivo:{}")
+    print("ENTROU EM process_df")
+    print("parent =", parent)
     parametros = {}
     estorno_apurado = {}
 
@@ -46,7 +48,8 @@ def process_df(df, stem):
 
     # Solicitar entrada manual
     print("input de dados")
-    parametros_brutos = ui.create_input_with_options(stem)
+    parametros_brutos = ui.create_input_with_options(stem, parent=parent)
+    print("DEPOIS DA JANELA")
 
     parametros_obj = ParametrosContrato.from_dict(parametros_brutos)
     parametros_obj.validar()
@@ -96,7 +99,7 @@ def process_df(df, stem):
         pass
 
     # saldo recalculado
-    df[["SALDO", "SND", "SNA", "SNM", "juros_recal", "juros_acumulado"]] = cal.saldo_recalculado(df)
+    df[["SALDO", "SND", "SNA", "SNM", "juros_recal", "juros_acumulado"]] = cal.saldo_recalculado(df, tx_mercado_opcao=parametros_obj.tx_mercado)
 
     # Juros recalculado
     df = cal.finalizar_saldo(df)

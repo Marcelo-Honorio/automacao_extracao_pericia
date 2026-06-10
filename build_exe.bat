@@ -1,21 +1,27 @@
 @echo off
-cd /d %~dp0
+setlocal
 
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-python -m pip install pyinstaller
+cd /d "%~dp0"
+
+echo ======================================
+echo Limpando build anterior...
+echo ======================================
 
 if exist build rmdir /s /q build
 if exist dist rmdir /s /q dist
 
-pyinstaller ^
-  --clean ^
-  --onedir ^
-  --noconsole ^
-  --name ExtratorFichaGrafica ^
-  --add-data "laudo\templates\*.xlsx;laudo\templates" ^
-  --add-data "laudo\templates\*.docx;laudo\templates" ^
-  --add-data "indices\dados\bcb\*.csv;indices\dados\bcb" ^
-  app.py
+echo.
+echo ======================================
+echo Gerando executavel...
+echo ======================================
+
+pyinstaller AutoPericia.spec
+
+echo.
+echo ======================================
+echo Build concluido!
+echo ======================================
+echo Executavel em:
+echo dist\AutoPericia\AutoPericia.exe
 
 pause

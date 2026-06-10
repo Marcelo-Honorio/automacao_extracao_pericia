@@ -37,7 +37,7 @@ def gerar_template_manual_xlsx(path_out: Path):
     df.to_excel(path_out, index=False)
 
 
-def processar_pasta(pasta: Path, out_root: Path):
+def processar_pasta(pasta: Path, out_root: Path, parent=None):
     # bibliotecas
     import pandas as pd
     import json
@@ -131,7 +131,7 @@ def processar_pasta(pasta: Path, out_root: Path):
             # =============================
             # AQUI entra o cálculo de pericia
             # =============================
-            df_process, parametros, estorno_apurado  = process_df(df, stem)
+            df_process, parametros, estorno_apurado  = process_df(df, stem, parent=parent)
             salvar_resultados(df_process, parametros, out_dir, stem) #Salvando os resultados da pericia (CORRIGIR ESSE PONTO)
 
             # salvar os parametros de todos os contratos
@@ -184,40 +184,43 @@ def processar_pasta(pasta: Path, out_root: Path):
 
 
 def main():
-    #import pericia.ui as ui
-    #import pericia.calculations as cal
-    #import pericia.process as process_df
+
     from laudo.builder import transformar_input_para_contexto
     from laudo.render_docx import gerar_laudo_docx
-    from laudo.estrutura_laudo import gerar_decisoes_irregularidade # gerar_decisoes_periciais
+    from laudo.estrutura_laudo import gerar_decisoes_irregularidade
+    
     root = tk.Tk()
     root.withdraw()
 
-    messagebox.showinfo("Extrator - Ficha Gráfica", "Selecione a pasta contendo os PDFs.")
-    pasta = filedialog.askdirectory(title="Selecione a pasta com PDFs")
-    if not pasta:
-        return
-
-    messagebox.showinfo("Extrator - Ficha Gráfica", "Selecione a pasta de saída (onde salvar o Excel e logs).")
-    out_root = filedialog.askdirectory(title="Selecione a pasta de saída")
-    if not out_root:
-        return
-
     try:
-        _, df, parametros_contrato, estornos_por_arquivo = processar_pasta(Path(pasta), Path(out_root))
-        #df_all.to_excel(out_dir / "dfs_consolidado.xlsx", index=False)
+        messagebox.showinfo("AutoPericia", "Selecione a pasta contendo os PDFs.", parent=root)
+        pasta = filedialog.askdirectory(title="Selecione a pasta com PDFs", parent=root)
+        if not pasta:
+            return
 
-        # Preparar os input do LAUDO
+        messagebox.showinfo("AutoPericia", "Selecione a pasta de saída (onde salvar o Excel e logs).", parent=root)
+        out_root = filedialog.askdirectory(title="Selecione a pasta de saída", parent=root)
+        if not out_root:
+            return
+
+        _, df, parametros_contrato, estornos_por_arquivo = processar_pasta(
+            Path(pasta),
+            Path(out_root),
+            parent=root
+        )
+
         contexto = transformar_input_para_contexto(parametros_contrato, estornos_por_arquivo)
-
         decisoes_irregularidades = gerar_decisoes_irregularidade(parametros_contrato)
-        
-        # Gerar o Laudo
+
         gerar_laudo_docx(Path(out_root), contexto, decisoes_irregularidades)
 
-        messagebox.showinfo("Concluído", f"Processamento finalizado!\n\nSaída:\n{out_root}")
+        messagebox.showinfo("Concluído", f"Processamento finalizado!\n\nSaída:\n{out_root}", parent=root)
+
     except Exception as e:
-        messagebox.showerror("Erro", str(e))
+        messagebox.showerror("Erro", str(e), parent=root)
+
+    finally:
+        root.destroy()
     
 if __name__ == "__main__":
     main()

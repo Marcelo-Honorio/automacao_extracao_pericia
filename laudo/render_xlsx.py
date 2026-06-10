@@ -19,10 +19,16 @@ TEMPLATE_ROWS = 7
 
 def preencher_cabecalho(ws, dados):
     op = dados["contrato"]
+    ## TITILO COM TAXA LIMITADA
+    if dados["tx_mercado"]=="Taxa limite - 12%":
+        tx = "Taxa Limitada e "
+    else:
+        tx = ""
+        
     # preenchimento 
     ws["D4"] = dados["juros"]/100
     ws["B3"] = dados["valor_liberado"]
-    ws["A1"] = f"Recálculo da operação nº {op} - Capitalização Afastada"
+    ws["A1"] = f"Recálculo da operação nº {op} - {tx}Capitalização Afastada "
 
 # =========================
 # EXPANDIR TABELA
@@ -76,7 +82,7 @@ def preencher_tabela(ws, df):
         ws.cell(r, 11, row["snm"])
         ws.cell(r, 12, row["juros"])
         ws.cell(r, 13, row["tx_mensal"])
-        ws.cell(r, 14, row["tx_anual"]) ### corrigir p/ incluir tx de mercado
+        ws.cell(r, 14, row["tx_mercado"]) ### corrigir p/ incluir tx de mercado
         ws.cell(r, 15, row['historico_estorno'])
         ws.cell(r, 16, row["debito_recal"])
         ws.cell(r, 17, row["estorno_credito"])
