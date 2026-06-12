@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+from ui_complemento import criar_complemento_garantias, normalizar_data
 
 
 def create_input_with_options(steam: str, parent=None):
@@ -11,6 +12,17 @@ def create_input_with_options(steam: str, parent=None):
     font_style = ("Arial", 12)
 
     def salvar():
+        # Aplicar a função para garantias
+        dados_garantias = obter_resultado_garantias()
+        # Datas dos contratos e vencimentos
+        try:
+            data_contrato_fmt = normalizar_data(data_contrato.get())
+            data_pagamento_fmt = normalizar_data(data_pagamento.get())
+            data_vencimento_fmt = normalizar_data(data_vencimento.get())
+        except ValueError as e:
+            tk.messagebox.showerror("Erro de data", str(e))
+            return
+
         nonlocal resultado
         resultado = {
             "autor": tipo_autor.get(),
@@ -21,14 +33,21 @@ def create_input_with_options(steam: str, parent=None):
             "valor_liberado": valor_liberado.get(),
             "periodo": periodo_var.get(),
             "estornos": [codigo for codigo, var in vars_estorno.items() if var.get()],
-            "juros": juros_var.get(),
-            "tx_mercado": tx_mercado.get(),
+            "juros_ano": juros_ano.get(),
+            "juros_mes": juros_mes.get(),
+            "tx_mercado": [codigo for codigo, var in vars_tx_mercado.items() if var.get()],
             "valor_parcela": valor_parcela.get(),
+            "valor_nominal_parcela": valor_nominal_parcela.get(),
             "numero_parcela": numero_parcela.get(),
+            "data_contrato": data_contrato_fmt,
+            "data_pagamento": data_pagamento_fmt,
+            "data_vencimento": data_vencimento_fmt,
             "tx_equivalente": tx_equivalente_var.get(),
             "opcoes_inadimplento": [codigo for codigo, var in vars_inadimplemento.items() if var.get()],
-            "opcoes_garantias": [codigo for codigo, var in vars_garantias.items() if var.get()],
+            "opcoes_garantias": dados_garantias["opcoes_garantias"],
+            "complemento_garantias": dados_garantias["complemento_garantias"],
             "finalidade_op": finalidade_op.get(),
+            "aditivo": existe_aditivo.get() == "Sim",
             "Capitalização": {
                 "existe_capitalizacao": existe_cap_var.get() == "Sim",
                 "periodicidade_capitalizacao": periodicidade_cap_var.get(),
@@ -91,7 +110,7 @@ def create_input_with_options(steam: str, parent=None):
     valor_liberado = tk.DoubleVar(master=root, value=0)
     ttk.Entry(root, textvariable=valor_liberado, font=font_style).grid(row=6, column=1, pady=2)
 
-    ttk.Label(root, text="Período:", font=font_style).grid(row=7, column=0, sticky="w")
+    ttk.Label(root, text="Incidência do juros mora:", font=font_style).grid(row=7, column=0, sticky="w")
     periodo_var = tk.StringVar(master=root, value="mensal")
     ttk.Combobox(
         root,
@@ -133,19 +152,30 @@ def create_input_with_options(steam: str, parent=None):
         font=font_style
     ).grid(row=9, column=1, pady=2)
 
-    ttk.Label(root, text="Taxa de juros efetiva:", font=font_style).grid(row=10, column=0, sticky="w")
-    juros_var = tk.DoubleVar(master=root, value=0.00)
-    ttk.Entry(root, textvariable=juros_var, font=font_style).grid(row=10, column=1, pady=2)
+    ttk.Label(root, text="Taxa de juros efetiva (a.m):", font=font_style).grid(row=10, column=0, sticky="w")
+    juros_ano = tk.DoubleVar(master=root, value=0.00)
+    ttk.Entry(root, textvariable=juros_ano, font=font_style).grid(row=10, column=1, pady=2)
 
-    ttk.Label(root, text="Valor da parcela:", font=font_style).grid(row=11, column=0, sticky="w")
+###########################################################################################################################################
+    ttk.Label(root, text="Taxa de juros efetiva (a.a):", font=font_style).grid(row=11, column=0, sticky="w")
+    juros_mes = tk.DoubleVar(master=root, value=0.00)
+    ttk.Entry(root, textvariable=juros_mes, font=font_style).grid(row=11, column=1, pady=2)
+
+    ttk.Label(root, text="Valor da parcela:", font=font_style).grid(row=12, column=0, sticky="w")
     valor_parcela = tk.DoubleVar(master=root, value=0)
-    ttk.Entry(root, textvariable=valor_parcela, font=font_style).grid(row=11, column=1, pady=2)
+    ttk.Entry(root, textvariable=valor_parcela, font=font_style).grid(row=12, column=1, pady=2)
 
-    ttk.Label(root, text="Número de parcelas:", font=font_style).grid(row=12, column=0, sticky="w")
+###########################################################################################################################################
+    ttk.Label(root, text="Valor nominal da parcela:", font=font_style).grid(row=13, column=0, sticky="w")
+    valor_nominal_parcela = tk.DoubleVar(master=root, value=0)
+    ttk.Entry(root, textvariable=valor_nominal_parcela, font=font_style).grid(row=13, column=1, pady=2)
+
+    ttk.Label(root, text="Número de parcelas:", font=font_style).grid(row=14, column=0, sticky="w")
     numero_parcela = tk.IntVar(master=root, value=0)
-    ttk.Entry(root, textvariable=numero_parcela, font=font_style).grid(row=12, column=1, pady=2)
+    ttk.Entry(root, textvariable=numero_parcela, font=font_style).grid(row=14, column=1, pady=2)
 
-    ttk.Label(root, text="Encargos de Inadimplemento:", font=font_style).grid(row=13, column=0, sticky="w")
+##########################################################################################################################################################
+    ttk.Label(root, text="Encargos de Inadimplemento:", font=font_style).grid(row=15, column=0, sticky="w")
     opcoes_inadimplemento = [
         ("Juros remuneratórios + Juros de mora 1,00% a.m.", "remuneratorio_mora_a.m"),
         ("Juros remuneratórios + Juros de mora 1,00% a.a.", "remuneratorio_mora_a.a"),
@@ -153,7 +183,7 @@ def create_input_with_options(steam: str, parent=None):
         ("Comissão de Permanência.", "comissao"),
     ]
     frame_inadimplemento = ttk.Frame(root)
-    frame_inadimplemento.grid(row=13, column=1, pady=2, padx=6, sticky="w")
+    frame_inadimplemento.grid(row=15, column=1, pady=2, padx=6, sticky="w")
     vars_inadimplemento = {}
 
     for i, (rotulo, codigo) in enumerate(opcoes_inadimplemento):
@@ -168,75 +198,95 @@ def create_input_with_options(steam: str, parent=None):
         ).grid(row=i, column=0, sticky="w")
         vars_inadimplemento[codigo] = var_inad
 
-    ttk.Label(root, text="Taxa de mercado:", font=font_style).grid(row=14, column=0, sticky="w")
-    tx_mercado = tk.StringVar(master=root, value="Nenhuma")
-    serie = [
-        "Nenhuma",
-        "20769 - PF Crédito rural com taxas de mercado",
-        "20770 - PF Crédito rural com taxas reguladas",
-        "Taxa limite - 12%"
-    ]
-    ttk.Combobox(root, values=serie, textvariable=tx_mercado, font=font_style).grid(row=14, column=1, pady=2)
+######################################################################################################################################################     DATAS DE CONTRATO, VENCIMENTOS 
+    data_contrato = tk.StringVar(master=root, value="")
+    data_pagamento = tk.StringVar(master=root, value="")
+    data_vencimento = tk.StringVar(master=root, value="")
 
-    ttk.Label(root, text="Garantia(s)", font=font_style).grid(row=15, column=0, sticky="w")
-    opcoes_garantias = [
-        ("Aval", "aval"),
-        ("Penhor cedular", "penhor_cedular"),
-        ("Hipoteca cedular", "hipoteca_cedular"),
-    ]
-    frame_garantias = ttk.Frame(root)
-    frame_garantias.grid(row=15, column=1, pady=2, padx=6, sticky="w")
-    vars_garantias = {}
+    ttk.Label(root, text="Data do contrato:", font=font_style).grid(row=16, column=0, sticky="w")
+    ttk.Entry(root, textvariable=data_contrato, font=font_style).grid(row=16, column=1, pady=2)
 
-    for i, (rotulo, codigo) in enumerate(opcoes_garantias):
-        var_gar = tk.BooleanVar(master=root, value=False)
+    ttk.Label(root, text="Data do pagamento:", font=font_style).grid(row=17, column=0, sticky="w")
+    ttk.Entry(root, textvariable=data_pagamento, font=font_style).grid(row=17, column=1, pady=2)
+
+    ttk.Label(root, text="Data de vencimento:", font=font_style).grid(row=18, column=0, sticky="w")
+    ttk.Entry(root, textvariable=data_vencimento, font=font_style).grid(row=18, column=1, pady=2)
+
+#######################################################################################################################
+    ttk.Label(root, text="Taxa de mercado:", font=font_style).grid(row=19, column=0, sticky="w")
+    tx_mercado = [
+        ("Nenhuma", "Nenhuma"),
+        ("20769 - PF Crédito rural com taxas de mercado", "20769"),
+        ("20770 - PF Crédito rural com taxas reguladas", "20770"),
+        ("Taxa limite - 12%", "Taxa limite - 12%"),
+    ]
+    frame_tx_mercado = ttk.Frame(root)
+    frame_tx_mercado.grid(row=19, column=1, pady=2, padx=6, sticky="w")
+    vars_tx_mercado = {}
+
+    for i, (rotulo, codigo) in enumerate(tx_mercado):
+        var_mer = tk.BooleanVar(master=root, value=False)
         tk.Checkbutton(
-            frame_garantias,
+            frame_tx_mercado,
             text=rotulo,
-            variable=var_gar,
+            variable=var_mer,
             font=font_style,
             anchor="w",
             justify="left"
         ).grid(row=i, column=0, sticky="w")
-        vars_garantias[codigo] = var_gar
+        vars_tx_mercado[codigo] = var_mer
 
-    ttk.Label(root, text="Finalidade da operação:", font=font_style).grid(row=16, column=0, sticky="w")
+############################################################################################################################################################
+    ttk.Label(root, text="Garantia(s)", font=font_style).grid(row=20, column=0, sticky="w")
+    frame_garantias = ttk.Frame(root)
+    frame_garantias.grid(row=20, column=1, pady=2, padx=6, sticky="w")
+    obter_resultado_garantias = criar_complemento_garantias(
+        root=root,
+        frame_garantias=frame_garantias,
+        font_style=font_style
+    )
+
+    ttk.Label(root, text="Finalidade da operação:", font=font_style).grid(row=21, column=0, sticky="w")
     finalidade_op = tk.StringVar(master=root, value="")
-    ttk.Entry(root, textvariable=finalidade_op, font=font_style).grid(row=16, column=1, pady=2)
+    ttk.Entry(root, textvariable=finalidade_op, font=font_style).grid(row=21, column=1, pady=2)
+
+    existe_aditivo = tk.StringVar(master=root, value="Não")
+    ttk.Label(root, text="Existe aditivo?", font=font_style).grid(row=22, column=0, sticky="w")
+    ttk.Combobox(root, values=["Sim", "Não"], textvariable=existe_aditivo, font=font_style).grid(row=22, column=1, pady=2)
 
     existe_cap_var = tk.StringVar(master=root, value="Não")
-    ttk.Label(root, text="Há cláusula de capitalização?", font=font_style).grid(row=17, column=0, sticky="w")
-    ttk.Combobox(root, values=["Sim", "Não"], textvariable=existe_cap_var, font=font_style).grid(row=17, column=1, pady=2)
+    ttk.Label(root, text="Há cláusula de capitalização?", font=font_style).grid(row=23, column=0, sticky="w")
+    ttk.Combobox(root, values=["Sim", "Não"], textvariable=existe_cap_var, font=font_style).grid(row=23, column=1, pady=2)
 
     periodicidade_cap_var = tk.StringVar(master=root, value="Não informado")
-    ttk.Label(root, text="Periodicidade da capitalização:", font=font_style).grid(row=18, column=0, sticky="w")
+    ttk.Label(root, text="Periodicidade da capitalização:", font=font_style).grid(row=24, column=0, sticky="w")
     ttk.Combobox(
         root,
         values=["mensal", "anual", "diaria", "semestral", "Não informado"],
         textvariable=periodicidade_cap_var,
         font=font_style
-    ).grid(row=18, column=1, pady=2)
+    ).grid(row=24, column=1, pady=2)
 
     taxa_supera_var = tk.StringVar(master=root, value="Não informado")
-    ttk.Label(root, text="Taxa anual > duodécuplo?", font=font_style).grid(row=19, column=0, sticky="w")
+    ttk.Label(root, text="Taxa anual > duodécuplo?", font=font_style).grid(row=25, column=0, sticky="w")
     ttk.Combobox(
         root,
         values=["Sim", "Não", "Não informado"],
         textvariable=taxa_supera_var,
         font=font_style
-    ).grid(row=19, column=1, pady=2)
+    ).grid(row=25, column=1, pady=2)
 
     regime_cap_var = tk.StringVar(master=root, value="Não informado")
-    ttk.Label(root, text="Regime da capitalização:", font=font_style).grid(row=20, column=0, sticky="w")
+    ttk.Label(root, text="Regime da capitalização:", font=font_style).grid(row=26, column=0, sticky="w")
     ttk.Combobox(
         root,
         values=["simples", "composto", "omisso", "Não informado"],
         textvariable=regime_cap_var,
         font=font_style
-    ).grid(row=20, column=1, pady=2)
+    ).grid(row=26, column=1, pady=2)
 
-    ttk.Button(root, text="Salvar", command=salvar).grid(row=21, column=0, pady=10)
-    ttk.Button(root, text="Cancelar", command=cancelar).grid(row=21, column=1, pady=10)
+    ttk.Button(root, text="Salvar", command=salvar).grid(row=27, column=0, pady=10)
+    ttk.Button(root, text="Cancelar", command=cancelar).grid(row=27, column=1, pady=10)
 
     root.protocol("WM_DELETE_WINDOW", cancelar)
 

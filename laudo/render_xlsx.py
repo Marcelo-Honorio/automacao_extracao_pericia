@@ -1,6 +1,7 @@
 from openpyxl import load_workbook
 from copy import copy
 from pathlib import Path
+import numpy as np
 
 # =========================
 # CONFIGURAÇÕES
@@ -65,6 +66,7 @@ def copiar_formatacao(ws, n_linhas):
 def preencher_tabela(ws, df):
 
     #df.loc[:, 'Historico_estorno'] = historico_estorno(df, estornos=dados["estorno"])
+    df = df.replace({0: np.nan})
 
     for i, row in df.iterrows():
 
