@@ -10,8 +10,8 @@ from .store import (
 from .config import SERIES
 # no futuro incluir: TMM - PF Conta garantida": [20727, 20741, 20726]
 TX_MERCADO_SERIES = {
-    "20769 - PF Crédito rural com taxas de mercado": [20769],
-    "20770 - PF Crédito rural com taxas reguladas": [20770],
+    "20769": [20769],
+    "20770": [20770],
     #"TMM - PF Conta garantida": [20727, 20741, 20726],
 }
 
@@ -67,22 +67,24 @@ def atualizar_serie(codigo: int) -> pd.DataFrame:
     salvar_serie_local(codigo, atualizado)
     return atualizado
 
-def atualizar_series_por_tx_mercado(tx_mercado: str) -> None:
+def atualizar_series_por_tx_mercado(tx_mercado: list) -> None:
     """
     Atualiza apenas as séries necessárias para a taxa escolhida.
     Evita atualizar a mesma série mais de uma vez na mesma execução.
     """
-    if not tx_mercado:
-        return
+    for i in tx_mercado:
 
-    codigos = TX_MERCADO_SERIES.get(tx_mercado, [])
+        if not i:
+            return
 
-    for codigo in codigos:
-        if codigo in _SERIES_ATUALIZADAS:
-            continue
+        codigos = TX_MERCADO_SERIES.get(i, [])
 
-        atualizar_serie(codigo)
-        _SERIES_ATUALIZADAS.add(codigo)
+        for codigo in codigos:
+            if codigo in _SERIES_ATUALIZADAS:
+                continue
+
+            atualizar_serie(codigo)
+            _SERIES_ATUALIZADAS.add(codigo)
 
 def inicializar_todas_series() -> dict[int, pd.DataFrame]:
     resultado = {}
