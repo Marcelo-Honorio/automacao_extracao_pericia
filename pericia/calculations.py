@@ -577,3 +577,91 @@ def taxa_mercado(df: pd.DataFrame, tx_mercado: str, coluna_data: str = "Data") -
         taxas.append(cache[chave])
 
     return taxas
+
+# Função para decidir qual função para utilizar
+def decidir_taxa(tx_opcoes, taxa_contrato, taxa_mercado=None):
+    """
+    tx_opcoes: lista vinda do input.
+        Ex: ["20769"], ["20770"], ["Taxa limite - 12%"], ["Nenhum"]
+
+    taxa_contrato: taxa do contrato em decimal.
+        Ex: 0.18 para 18% a.a.
+
+    taxa_mercado: taxa de mercado em decimal.
+        Ex: 0.12 para 12% a.a.
+    """
+
+    C = taxa_contrato
+    TL = 0.12
+    TMM = taxa_mercado
+    TMM_15 = TMM * 1.5 if TMM is not None else None
+
+    # Se não escolheu taxa de mercado nem taxa limite
+    if not tx_opcoes or "Nenhum" in tx_opcoes or "Nenhuma" in tx_opcoes:
+        return {
+            "taxa_usada": C,
+            "criterio": "C",
+            "descricao": "Taxa do contrato"
+        }
+
+    # Se escolheu apenas taxa limite
+    if "Taxa limite - 12%" in tx_opcoes and TMM is None:
+        return {
+            "taxa_usada": min(C, TL),
+            "criterio": "TL" if C > TL else "C",
+            "descricao": "Taxa limite de 12% ou contrato, a menor"
+        }
+
+    # Se escolheu taxa de mercado
+    if TMM is None:
+        raise ValueError("Taxa de mercado não informada.")
+
+    # 1) TL > C > TMM(1,5) usa TMM
+    if TL > C > TMM_15:
+        return {
+            "taxa_usada": TMM,
+            "criterio": "TMM",
+            "descricao": "TL > C > TMM(1,5)"
+        }
+
+    # 2) C > TL > TMM usa TMM ou TL
+    if C > TL > TMM:
+        return {
+            "taxa_usada": TMM,
+            "criterio": "TMM",
+            "opcoes_possiveis": ["TMM", "TL"],
+            "descricao": "C > TL > TMM"
+        }
+
+    # 3) C > TL < TMM(1,5) usa TL
+    if C > TL and TL < TMM_15:
+        return {
+            "taxa_usada": TL,
+            "criterio": "TL",
+            "descricao": "C > TL < TMM(1,5)"
+        }
+
+    # 4) C > TMM(1,5) > TL usa TL ou TMM
+    if C > TMM_15 > TL:
+        return {
+            "taxa_usada": TL,
+            "criterio": "TL",
+            "opcoes_possiveis": ["TL", "TMM"],
+            "descricao": "C > TMM(1,5) > TL"
+        }
+
+    # 5) C < TL < TMM usa C
+    if C < TL < TMM:
+        return {
+            "taxa_usada": C,
+            "criterio": "C",
+            "descricao": "C < TL < TMM"
+        }
+
+    # Regra de segurança
+    return {
+        "taxa_usada": min(C, TL, TMM),
+        "criterio": "MENOR_TAXA",
+        "descricao": "Nenhuma condição específica encontrada; aplicada menor taxa"
+    }
+

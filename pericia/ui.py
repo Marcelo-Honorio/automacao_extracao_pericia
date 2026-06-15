@@ -259,10 +259,10 @@ def create_input_with_options(steam: str, parent=None):
     data_pagamento = tk.StringVar(master=scroll_frame, value="")
     data_vencimento = tk.StringVar(master=scroll_frame, value="")
 
-    ttk.Label(scroll_frame, text="Data do contrato:", font=font_style).grid(row=16, column=0, sticky="w")
+    ttk.Label(scroll_frame, text="Data da contratação:", font=font_style).grid(row=16, column=0, sticky="w")
     ttk.Entry(scroll_frame, textvariable=data_contrato, font=font_style).grid(row=16, column=1, pady=2)
 
-    ttk.Label(scroll_frame, text="Data do pagamento:", font=font_style).grid(row=17, column=0, sticky="w")
+    ttk.Label(scroll_frame, text="Data do 1ª pagamento:", font=font_style).grid(row=17, column=0, sticky="w")
     ttk.Entry(scroll_frame, textvariable=data_pagamento, font=font_style).grid(row=17, column=1, pady=2)
 
     ttk.Label(scroll_frame, text="Data de vencimento:", font=font_style).grid(row=18, column=0, sticky="w")
