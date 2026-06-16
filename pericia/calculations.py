@@ -579,7 +579,7 @@ def taxa_mercado(df: pd.DataFrame, tx_mercado: str, coluna_data: str = "Data") -
     return taxas
 
 # Função para decidir qual função para utilizar
-def decidir_taxa(tx_opcoes, taxa_contrato, taxa_mercado=None):
+def decidir_taxa(tx_opcoes, taxa_contrato, taxas_mercado=None):
     """
     tx_opcoes: lista vinda do input.
         Ex: ["20769"], ["20770"], ["Taxa limite - 12%"], ["Nenhum"]
@@ -590,78 +590,79 @@ def decidir_taxa(tx_opcoes, taxa_contrato, taxa_mercado=None):
     taxa_mercado: taxa de mercado em decimal.
         Ex: 0.12 para 12% a.a.
     """
+    taxas_mercado = taxas_mercado or {}
 
     C = taxa_contrato
     TL = 0.12
-    TMM = taxa_mercado
-    TMM_15 = TMM * 1.5 if TMM is not None else None
 
-    # Se não escolheu taxa de mercado nem taxa limite
-    if not tx_opcoes or "Nenhum" in tx_opcoes or "Nenhuma" in tx_opcoes:
-        return {
-            "taxa_usada": C,
-            "criterio": "C",
-            "descricao": "Taxa do contrato"
-        }
+    resultados = []
 
-    # Se escolheu apenas taxa limite
-    if "Taxa limite - 12%" in tx_opcoes and TMM is None:
-        return {
-            "taxa_usada": min(C, TL),
-            "criterio": "TL" if C > TL else "C",
-            "descricao": "Taxa limite de 12% ou contrato, a menor"
-        }
+    for codigo in tx_opcoes:
 
-    # Se escolheu taxa de mercado
-    if TMM is None:
-        raise ValueError("Taxa de mercado não informada.")
+        if codigo in ("Nenhum", "Nenhuma"):
+            resultados.append({
+                "codigo": codigo,
+                "taxa": C,
+                "criterio": "C"
+            })
+            continue
 
-    # 1) TL > C > TMM(1,5) usa TMM
-    if TL > C > TMM_15:
-        return {
-            "taxa_usada": TMM,
-            "criterio": "TMM",
-            "descricao": "TL > C > TMM(1,5)"
-        }
+        if codigo == "Taxa limite - 12%":
+            resultados.append({
+                "codigo": codigo,
+                "taxa": min(C, TL),
+                "criterio": "TL"
+            })
+            continue
 
-    # 2) C > TL > TMM usa TMM ou TL
-    if C > TL > TMM:
-        return {
-            "taxa_usada": TMM,
-            "criterio": "TMM",
-            "opcoes_possiveis": ["TMM", "TL"],
-            "descricao": "C > TL > TMM"
-        }
+        TMM = taxas_mercado.get(codigo)
 
-    # 3) C > TL < TMM(1,5) usa TL
-    if C > TL and TL < TMM_15:
-        return {
-            "taxa_usada": TL,
-            "criterio": "TL",
-            "descricao": "C > TL < TMM(1,5)"
-        }
+        if TMM is None:
+            continue
 
-    # 4) C > TMM(1,5) > TL usa TL ou TMM
-    if C > TMM_15 > TL:
-        return {
-            "taxa_usada": TL,
-            "criterio": "TL",
-            "opcoes_possiveis": ["TL", "TMM"],
-            "descricao": "C > TMM(1,5) > TL"
-        }
+        TMM_15 = TMM * 1.5
 
-    # 5) C < TL < TMM usa C
-    if C < TL < TMM:
-        return {
-            "taxa_usada": C,
-            "criterio": "C",
-            "descricao": "C < TL < TMM"
-        }
+        if TL > C > TMM_15:
+            taxa = TMM
+            criterio = "TMM"
 
-    # Regra de segurança
-    return {
-        "taxa_usada": min(C, TL, TMM),
-        "criterio": "MENOR_TAXA",
-        "descricao": "Nenhuma condição específica encontrada; aplicada menor taxa"
-    }
+        elif C > TL > TMM:
+            taxa = TMM
+            criterio = "TMM"
 
+        elif C > TL and TL < TMM_15:
+            taxa = TL
+            criterio = "TL"
+
+        elif C > TMM_15 > TL:
+            taxa = TL
+            criterio = "TL"
+
+        elif C < TL < TMM:
+            taxa = C
+            criterio = "C"
+
+        else:
+            taxa = min(C, TL, TMM)
+            criterio = "MENOR"
+
+        resultados.append({
+            "codigo": codigo,
+            "taxa": taxa,
+            "criterio": criterio,
+            "tmm": TMM
+        })
+
+    return resultados
+
+
+op_taxa = ["Nenhuma", "20769", "20770", "Taxa limite - 12%"]
+
+taxa_info = obter_taxa_por_data(20770, "21/04/2024")
+
+taxa_info["valor"]
+
+taxas_mercado = {
+    "20769": 0.1402,
+    "20770": 0.0812
+}
