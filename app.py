@@ -131,7 +131,7 @@ def processar_pasta(pasta: Path, out_root: Path, parent=None):
             # =============================
             # AQUI entra o cálculo de pericia
             # =============================
-            df_process, parametros, estorno_apurado  = process_df(df, stem, parent=parent)
+            df_process, parametros, estorno_apurado  = process_df(df, stem, parent=parent, out_root=out_root)
             salvar_resultados(df_process, parametros, out_dir, stem) #Salvando os resultados da pericia (CORRIGIR ESSE PONTO)
 
             # salvar os parametros de todos os contratos

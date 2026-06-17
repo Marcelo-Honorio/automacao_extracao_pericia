@@ -25,7 +25,6 @@ class PremissasCapitalizacao:
     Representa as premissas técnico-jurídicas ligadas à capitalização.
     Não executa o cálculo; apenas descreve como a cláusula foi lida.
     """
-
     existe_capitalizacao: bool = False
     periodicidade_capitalizacao: Optional[PeriodicidadeCapitalizacao] = None
     taxa_anual_supera_duodecuplo: Optional[bool] = None
@@ -73,14 +72,21 @@ class ParametrosContrato:
     valor_liberado: float
     periodo: str
     estornos: list[str]
-    juros: float
-    tx_mercado: str
+    juros_ano: float
+    juros_mes: float
+    tx_mercado: list[str]
     valor_parcela: float
+    valor_nominal_parcela: float
     numero_parcela: int
+    data_contrato: str
+    data_pagamento: str
+    data_vencimento: str
     tx_equivalente: str
     opcoes_inadimplento: list[str]
     opcoes_garantias: list[str]
+    complemento_garantias: dict
     finalidade_op: str
+    aditivo: bool
 
     capitalizacao: PremissasCapitalizacao = field(default_factory=PremissasCapitalizacao)
 
@@ -121,13 +127,20 @@ class ParametrosContrato:
             valor_liberado=float(data.get("valor_liberado", 0) or 0),
             periodo=data.get("periodo", "mensal"),
             estornos=list(data.get("estornos", [])),
-            juros=float(data.get("juros", 0) or 0),
-            tx_mercado=data.get("tx_mercado", "Nenhuma"),
+            juros_ano=float(data.get("juros_ano", 0) or 0),
+            juros_mes=float(data.get("juros_mes", 0) or 0),
+            tx_mercado= data.get("tx_mercado", ["Nenhuma"]),
             valor_parcela=float(data.get("valor_parcela", 0) or 0),
+            valor_nominal_parcela=float(data.get("valor_nominal_parcela", 0) or 0),
             numero_parcela=int(data.get("numero_parcela", 0) or 0),
+            data_contrato=data.get("data_contrato", ""),
+            data_pagamento=data.get("data_pagamento", ""),
+            data_vencimento=data.get("data_vencimento", ""),
             tx_equivalente=data.get("tx_equivalente", "diaria"),
             opcoes_inadimplento=list(data.get("opcoes_inadimplento", [])),
             opcoes_garantias=list(data.get("opcoes_garantias", [])),
+            complemento_garantias=data.get("complemento_garantias", {}),
             finalidade_op=data.get("finalidade_op", ""),
+            aditivo=data.get("aditivo", False),
             capitalizacao=capitalizacao,
         )

@@ -3,7 +3,8 @@ from tkinter import ttk, messagebox
 from pericia.ui_complemento import criar_complemento_garantias, normalizar_data
 
 
-def create_input_with_options(steam: str, parent=None):
+def create_input_with_options(steam: str, parametros_iniciais=None, parent=None):
+    parametros_iniciais = parametros_iniciais or {}
     resultado = {}
 
     #root = tk.Toplevel()
@@ -125,7 +126,7 @@ def create_input_with_options(steam: str, parent=None):
     ttk.Label(scroll_frame, text=f"Arquivo: {steam}", font=16).grid(row=0, column=0, columnspan=2, pady=5)
 
     ttk.Label(scroll_frame, text="Autor:", font=font_style).grid(row=1, column=0, sticky="w")
-    tipo_autor = tk.StringVar(master=scroll_frame, value="Banco do Brasil S.A.")
+    tipo_autor = tk.StringVar(master=scroll_frame, value=parametros_iniciais.get("autor","Banco do Brasil S.A."))
     ttk.Combobox(
         scroll_frame,
         values=["Banco do Brasil S.A.", "Banco Santander S.A.", "Caixa Econômica Federal", "Banco Bradesco S.A."],
@@ -134,7 +135,7 @@ def create_input_with_options(steam: str, parent=None):
     ).grid(row=1, column=1, pady=2)
 
     ttk.Label(scroll_frame, text="Tipo operação:", font=font_style).grid(row=2, column=0, sticky="w")
-    tipo_doc = tk.StringVar(master=scroll_frame, value="Cédula Rural Pignoratícia")
+    tipo_doc = tk.StringVar(master=scroll_frame, value=parametros_iniciais.get("instrumento","Cédula Rural Pignoratícia"))
     opcoes_doc = [
         "Cédula Rural Pignoratícia",
         "Cédula Rural Hipotecária",
@@ -146,11 +147,11 @@ def create_input_with_options(steam: str, parent=None):
     ttk.Combobox(scroll_frame, values=opcoes_doc, textvariable=tipo_doc, font=font_style).grid(row=2, column=1, pady=2)
 
     ttk.Label(scroll_frame, text="Cliente(s):", font=font_style).grid(row=3, column=0, sticky="w")
-    nome_cliente = tk.StringVar(master=scroll_frame, value="")
+    nome_cliente = tk.StringVar(master=scroll_frame, value=parametros_iniciais.get("cliente",""))
     ttk.Entry(scroll_frame, textvariable=nome_cliente, font=font_style).grid(row=3, column=1, pady=2)
 
     ttk.Label(scroll_frame, text="Agente(s):", font=font_style).grid(row=4, column=0, sticky="w")
-    tipo_agente = tk.StringVar(master=scroll_frame, value="do réu")
+    tipo_agente = tk.StringVar(master=scroll_frame, value=parametros_iniciais.get("agente","do réu"))
     ttk.Combobox(
         scroll_frame,
         values=["do réu", "da ré", "dos réus", "das rés"],
@@ -159,15 +160,15 @@ def create_input_with_options(steam: str, parent=None):
     ).grid(row=4, column=1, pady=2)
 
     ttk.Label(scroll_frame, text="Número da operação:", font=font_style).grid(row=5, column=0, sticky="w")
-    contrato_n = tk.StringVar(master=scroll_frame, value="0")
+    contrato_n = tk.StringVar(master=scroll_frame, value=parametros_iniciais.get("contrato","0"))
     ttk.Entry(scroll_frame, textvariable=contrato_n, font=font_style).grid(row=5, column=1, pady=2)
 
     ttk.Label(scroll_frame, text="Valor liberado/solicitado:", font=font_style).grid(row=6, column=0, sticky="w")
-    valor_liberado = tk.DoubleVar(master=scroll_frame, value=0)
+    valor_liberado = tk.DoubleVar(master=scroll_frame, value=parametros_iniciais.get("valor_liberado", 0))
     ttk.Entry(scroll_frame, textvariable=valor_liberado, font=font_style).grid(row=6, column=1, pady=2)
 
     ttk.Label(scroll_frame, text="Incidência do juros mora:", font=font_style).grid(row=7, column=0, sticky="w")
-    periodo_var = tk.StringVar(master=scroll_frame, value="mensal")
+    periodo_var = tk.StringVar(master=scroll_frame, value=parametros_iniciais.get("periodo","mensal"))
     ttk.Combobox(
         scroll_frame,
         values=["mensal", "cobrança única"],
@@ -187,8 +188,9 @@ def create_input_with_options(steam: str, parent=None):
     frame_estorno.grid(row=8, column=1, pady=2, padx=6, sticky="w")
     vars_estorno = {}
 
+    estornos_salvos = parametros_iniciais.get("estornos", [])
     for i, (rotulo, codigo) in enumerate(opcoes_estorno):
-        var_estorno = tk.BooleanVar(master=scroll_frame, value=False)
+        var_estorno = tk.BooleanVar(master=scroll_frame, value=codigo in estornos_salvos)
         tk.Checkbutton(
             frame_estorno,
             text=rotulo,
@@ -200,7 +202,7 @@ def create_input_with_options(steam: str, parent=None):
         vars_estorno[codigo] = var_estorno
 
     ttk.Label(scroll_frame, text="Taxa equivalente:", font=font_style).grid(row=9, column=0, sticky="w")
-    tx_equivalente_var = tk.StringVar(master=scroll_frame, value="diaria")
+    tx_equivalente_var = tk.StringVar(master=scroll_frame, value=parametros_iniciais.get("tx_equivalente","diaria"))
     ttk.Combobox(
         scroll_frame,
         values=["base30", "diaria"],
@@ -208,26 +210,26 @@ def create_input_with_options(steam: str, parent=None):
         font=font_style
     ).grid(row=9, column=1, pady=2)
 
-    ttk.Label(scroll_frame, text="Taxa de juros efetiva (a.m):", font=font_style).grid(row=10, column=0, sticky="w")
-    juros_ano = tk.DoubleVar(master=scroll_frame, value=0.00)
+    ttk.Label(scroll_frame, text="Taxa de juros efetiva (a.a):", font=font_style).grid(row=10, column=0, sticky="w")
+    juros_ano = tk.DoubleVar(master=scroll_frame, value=parametros_iniciais.get("juros_ano", 0.00))
     ttk.Entry(scroll_frame, textvariable=juros_ano, font=font_style).grid(row=10, column=1, pady=2)
 
 ###########################################################################################################################################
-    ttk.Label(scroll_frame, text="Taxa de juros efetiva (a.a):", font=font_style).grid(row=11, column=0, sticky="w")
-    juros_mes = tk.DoubleVar(master=scroll_frame, value=0.00)
+    ttk.Label(scroll_frame, text="Taxa de juros efetiva (a.m):", font=font_style).grid(row=11, column=0, sticky="w")
+    juros_mes = tk.DoubleVar(master=scroll_frame, value=parametros_iniciais.get("juros_mes", 0.00))
     ttk.Entry(scroll_frame, textvariable=juros_mes, font=font_style).grid(row=11, column=1, pady=2)
 
     ttk.Label(scroll_frame, text="Valor da parcela:", font=font_style).grid(row=12, column=0, sticky="w")
-    valor_parcela = tk.DoubleVar(master=scroll_frame, value=0)
+    valor_parcela = tk.DoubleVar(master=scroll_frame, value=parametros_iniciais.get("valor_parcela", 0))
     ttk.Entry(scroll_frame, textvariable=valor_parcela, font=font_style).grid(row=12, column=1, pady=2)
 
 ###########################################################################################################################################
     ttk.Label(scroll_frame, text="Valor nominal da parcela:", font=font_style).grid(row=13, column=0, sticky="w")
-    valor_nominal_parcela = tk.DoubleVar(master=scroll_frame, value=0)
+    valor_nominal_parcela = tk.DoubleVar(master=scroll_frame, value=parametros_iniciais.get("valor_nominal_parcela", 0))
     ttk.Entry(scroll_frame, textvariable=valor_nominal_parcela, font=font_style).grid(row=13, column=1, pady=2)
 
     ttk.Label(scroll_frame, text="Número de parcelas:", font=font_style).grid(row=14, column=0, sticky="w")
-    numero_parcela = tk.IntVar(master=scroll_frame, value=0)
+    numero_parcela = tk.IntVar(master=scroll_frame, value=parametros_iniciais.get("numero_parcela", 0))
     ttk.Entry(scroll_frame, textvariable=numero_parcela, font=font_style).grid(row=14, column=1, pady=2)
 
 ##########################################################################################################################################################
@@ -242,8 +244,9 @@ def create_input_with_options(steam: str, parent=None):
     frame_inadimplemento.grid(row=15, column=1, pady=2, padx=6, sticky="w")
     vars_inadimplemento = {}
 
+    inad_salvos = parametros_iniciais.get("opcoes_inadimplento", [])
     for i, (rotulo, codigo) in enumerate(opcoes_inadimplemento):
-        var_inad = tk.BooleanVar(master=scroll_frame, value=False)
+        var_inad = tk.BooleanVar(master=scroll_frame, value=codigo in inad_salvos)
         tk.Checkbutton(
             frame_inadimplemento,
             text=rotulo,
@@ -255,9 +258,9 @@ def create_input_with_options(steam: str, parent=None):
         vars_inadimplemento[codigo] = var_inad
 
 ######################################################################################################################################################     DATAS DE CONTRATO, VENCIMENTOS 
-    data_contrato = tk.StringVar(master=scroll_frame, value="")
-    data_pagamento = tk.StringVar(master=scroll_frame, value="")
-    data_vencimento = tk.StringVar(master=scroll_frame, value="")
+    data_contrato = tk.StringVar(master=scroll_frame, value=parametros_iniciais.get("data_contrato", ""))
+    data_pagamento = tk.StringVar(master=scroll_frame, value=parametros_iniciais.get("data_pagamento", ""))
+    data_vencimento = tk.StringVar(master=scroll_frame, value=parametros_iniciais.get("data_vencimento", ""))
 
     ttk.Label(scroll_frame, text="Data da contratação:", font=font_style).grid(row=16, column=0, sticky="w")
     ttk.Entry(scroll_frame, textvariable=data_contrato, font=font_style).grid(row=16, column=1, pady=2)
@@ -280,8 +283,9 @@ def create_input_with_options(steam: str, parent=None):
     frame_tx_mercado.grid(row=19, column=1, pady=2, padx=6, sticky="w")
     vars_tx_mercado = {}
 
+    tx_salvos = parametros_iniciais.get("tx_mercado", [])
     for i, (rotulo, codigo) in enumerate(tx_mercado):
-        var_mer = tk.BooleanVar(master=scroll_frame, value=False)
+        var_mer = tk.BooleanVar(master=scroll_frame, value=codigo in tx_salvos)
         tk.Checkbutton(
             frame_tx_mercado,
             text=rotulo,
@@ -293,7 +297,7 @@ def create_input_with_options(steam: str, parent=None):
         vars_tx_mercado[codigo] = var_mer
 
     ttk.Label(scroll_frame, text="Finalidade da operação:", font=font_style).grid(row=20, column=0, sticky="w")
-    finalidade_op = tk.StringVar(master=scroll_frame, value="")
+    finalidade_op = tk.StringVar(master=scroll_frame, value=parametros_iniciais.get("finalidade_op", ""))
     ttk.Entry(scroll_frame, textvariable=finalidade_op, font=font_style).grid(row=20, column=1, pady=2)
 ############################################################################################################################################################
     ttk.Label(scroll_frame, text="Garantia(s)", font=font_style).grid(row=21, column=0, sticky="w")
@@ -302,18 +306,22 @@ def create_input_with_options(steam: str, parent=None):
     obter_resultado_garantias = criar_complemento_garantias(
         root=root,
         frame_garantias=frame_garantias,
-        font_style=font_style
+        font_style=font_style,
+        parametros_iniciais=parametros_iniciais
     ) 
 
-    existe_aditivo = tk.StringVar(master=scroll_frame, value="Não")
+    existe_aditivo = tk.StringVar(master=scroll_frame, value=parametros_iniciais.get("aditivo", "Não"))
     ttk.Label(scroll_frame, text="Existe aditivo?", font=font_style).grid(row=22, column=0, sticky="w")
     ttk.Combobox(scroll_frame, values=["Sim", "Não"], textvariable=existe_aditivo, font=font_style).grid(row=22, column=1, pady=2)
 
-    existe_cap_var = tk.StringVar(master=scroll_frame, value="Não")
+    # parametros salvas de capitalização
+    cap = parametros_iniciais.get("Capitalização", {})
+
+    existe_cap_var = tk.StringVar(master=scroll_frame, value="Sim" if cap.get("existe_capitalizacao") else "Não")
     ttk.Label(scroll_frame, text="Há cláusula de capitalização?", font=font_style).grid(row=23, column=0, sticky="w")
     ttk.Combobox(scroll_frame, values=["Sim", "Não"], textvariable=existe_cap_var, font=font_style).grid(row=23, column=1, pady=2)
 
-    periodicidade_cap_var = tk.StringVar(master=scroll_frame, value="Não informado")
+    periodicidade_cap_var = tk.StringVar(master=scroll_frame, value=cap.get("periodicidade_capitalizacao", "Não informado"))
     ttk.Label(scroll_frame, text="Periodicidade da capitalização:", font=font_style).grid(row=24, column=0, sticky="w")
     ttk.Combobox(
         scroll_frame,
@@ -322,7 +330,7 @@ def create_input_with_options(steam: str, parent=None):
         font=font_style
     ).grid(row=24, column=1, pady=2)
 
-    taxa_supera_var = tk.StringVar(master=scroll_frame, value="Não informado")
+    taxa_supera_var = tk.StringVar(master=scroll_frame, value=cap.get("taxa_anual_supera_duodecuplo", "Não informado"))
     ttk.Label(scroll_frame, text="Taxa anual > duodécuplo?", font=font_style).grid(row=25, column=0, sticky="w")
     ttk.Combobox(
         scroll_frame,
@@ -331,7 +339,7 @@ def create_input_with_options(steam: str, parent=None):
         font=font_style
     ).grid(row=25, column=1, pady=2)
 
-    regime_cap_var = tk.StringVar(master=scroll_frame, value="Não informado")
+    regime_cap_var = tk.StringVar(master=scroll_frame, value=cap.get("regime_capitalizacao", "Não informado"))
     ttk.Label(scroll_frame, text="Regime da capitalização:", font=font_style).grid(row=26, column=0, sticky="w")
     ttk.Combobox(
         scroll_frame,

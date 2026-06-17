@@ -2,9 +2,11 @@ import pandas as pd
 import pericia.ui as ui
 import pericia.calculations as cal
 
+from pathlib import Path
 from indices.bcb.service import atualizar_series_por_tx_mercado
 from pericia.models import ParametrosContrato
 from pericia.rules import decidir_capitalizacao
+from pericia.oi_utils import salvar_parametros, carregar_parametros
 
 def read_table_from_file(file_path):
     try:
@@ -18,7 +20,7 @@ def read_table_from_file(file_path):
         print(f"Erro ao ler o arquivo {file_path}: {e}")
 
 
-def process_df(df, stem, parent=None):
+def process_df(df, stem, parent=None, out_root=None):
     #print(f"Processando arquivo:{}")
     print("ENTROU EM process_df")
     print("parent =", parent)
@@ -46,21 +48,28 @@ def process_df(df, stem, parent=None):
     if df["Data"].isna().any():
         raise ValueError(f"Existem datas inválidas no arquivo: {stem}")
 
+    # Caminho para parametros da pericia
+    parametros_path = out_root / "parametros_inputs" / f"{stem}.json"
+
     # Solicitar entrada manual
-    print("input de dados")
-    parametros_brutos = ui.create_input_with_options(stem, parent=parent)
-    print("DEPOIS DA JANELA")
+    if parametros_path.exists():
+        parametros_brutos = carregar_parametros(parametros_path)
+    else:
+        print("input de dados")
+        parametros_brutos = ui.create_input_with_options(stem, parent=parent)
+        salvar_parametros(parametros_path, parametros_brutos)
+        print("DEPOIS DA JANELA")
 
     parametros_obj = ParametrosContrato.from_dict(parametros_brutos)
     parametros_obj.validar()
 
     decisao_cap = decidir_capitalizacao(parametros_obj.capitalizacao)
-    atualizar_series_por_tx_mercado(parametros_obj.tx_mercado)
+    atualizar_series_por_tx_mercado(parametros_obj.tx_mercado) 
 
-    # Atualizar apenas as séries necessárias para a taxa escolhida
-    #tx_mercado = parametros.get("tx_mercado")
-    #atualizar_series_por_tx_mercado(tx_mercado)
-            
+    taxas_mercado = cal.taxas_de_mercado(parametros_obj.tx_mercado, parametros_obj.data_contrato)
+    taxas_parametros = cal.decidir_taxa(parametros_obj.tx_mercado, parametros_obj.juros_ano, taxas_mercado)
+    tx_utilizada = min(taxas_parametros, key=lambda x: x['taxa'])
+               
     # sequência do cálculo
     df.loc[:, "Historico"] = df["Historico"].apply(cal.classificar)
     df.loc[:, 'dias']=cal.dias(df["Data"])
@@ -71,7 +80,7 @@ def process_df(df, stem, parent=None):
     df.loc[:, 'sna']=cal.SNA(df)
     df.loc[:, 'snm']=cal.SNM(df, periodo=parametros_obj.periodo)
     df.loc[:, 'juros']=cal.juros(df)
-    df.loc[:, "tx_mercado"] = cal.taxa_mercado(df, tx_mercado=parametros_obj.tx_mercado)
+    df.loc[:, "tx_mercado"] = cal.taxa_mercado(df, tx_mercado=tx_utilizada)
     df.loc[:, 'tx_anual'] = cal.tx_anual(df, tx_equivalente=parametros_obj.tx_equivalente)
     df.loc[:, 'tx_mensal'] = cal.tx_mensal(df, tx_equivalente=parametros_obj.tx_equivalente)
 

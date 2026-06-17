@@ -344,7 +344,7 @@ def incluir_historico_final_normalidade(df):
     return df
 
 # Função para recalcular o saldo final, snd, sna, snm, juros_recal, juros_acumulado
-def saldo_recalculado(df, tx_mercado_opcao="Nenhuma"):
+def saldo_recalculado(df, tx_mercado_opcao=["Nenhuma"]):
     # Trocar os NA po 0 nas colunas de crédito e debito
     df["Credito"] = df["Credito"].fillna(0)
     df["Debito"] = df["Debito"].fillna(0)
@@ -362,11 +362,11 @@ def saldo_recalculado(df, tx_mercado_opcao="Nenhuma"):
     juros_acumulado = []
 
     def obter_taxa_aplicada(i):
-        if tx_mercado_opcao == "Nenhuma":
+        if "Nenhuma" in tx_mercado_opcao:
             return df["tx_mensal"][i]
 
-        if tx_mercado_opcao == "Taxa limite - 12%":
-            return (1 + 0.12) ** (1 / 12) - 1
+        #if "Taxa limite - 12%" in tx_mercado_opcao:
+        #    return (1 + 0.12) ** (1 / 12) - 1
 
         return df["tx_mercado"][i]
 
@@ -511,7 +511,6 @@ def estorno_resultado(df, estornos):
 
     return resultado
 
-
 # transformar taxa media de mercado anual em taxas mensal
 def transf_anual_mensal(taxa):
     taxa = taxa / 100
@@ -520,63 +519,60 @@ def transf_anual_mensal(taxa):
 
 
 # Função para calcular média entre as Taxas de Mercado
-
-
 ## Adicionar Taxa de Mercado
-def taxa_mercado(df: pd.DataFrame, tx_mercado: str, coluna_data: str = "Data") -> list:
+def taxa_mercado(df: pd.DataFrame, tx_mercado:dict, coluna_data: str = "Data") -> list:
     """
-    Retorna uma lista com a taxa de mercado correspondente a cada data do DataFrame.
-    """
-    SERIES_BCB = {
-        "20769 - PF Crédito rural com taxas de mercado": 20769,
-        "20770 - PF Crédito rural com taxas reguladas": 20770,
-        "Taxa limite - 12%": 12.00
-#        "TMM - PF Conta garantida": {
-#            "pj_cheque": 20727,
-#            "pf_cheque": 20741,
-#            "pj_conta": 20726,
-#        },
+    Retorna uma lista com a taxa definida para cada data do DataFrame.
+
+    tx_mercado esperado:
+    {
+        "codigo": "20769",
+        "taxa": 0.0,
+        "criterio": "C",
+        "tmm": 13.83
     }
+    """
 
     df = df.copy()
 
     if coluna_data not in df.columns:
         raise ValueError(f"Coluna de data '{coluna_data}' não encontrada no DataFrame.")
 
+    if "snm" not in df.columns:
+        raise ValueError("Coluna 'snm' não encontrada no DataFrame.")
+
     df[coluna_data] = pd.to_datetime(df[coluna_data], errors="coerce")
 
     if df[coluna_data].isna().any():
         raise ValueError(f"Existem datas inválidas na coluna '{coluna_data}'.")
 
-    codigo_serie = SERIES_BCB.get(tx_mercado)
+    if not isinstance(tx_mercado, dict):
+        raise TypeError("tx_mercado deve ser um dicionário com as chaves: codigo, taxa, criterio e tmm.")
 
-    ## Nenhuma taxa de mercado
-    if codigo_serie is None:
-        return [None for _ in df[coluna_data]]
+    if "taxa" not in tx_mercado:
+        raise ValueError("tx_mercado não possui a chave 'taxa'.")
 
-    taxas = []
-    # Fórmula composta:
-    if tx_mercado == "Taxa limite - 12%":
-        tx = SERIES_BCB["Taxa limite - 12%"]
-        taxas = [tx] * len(df[coluna_data])
-        return taxas
+    taxa = transf_anual_mensal(tx_mercado["taxa"])
 
-    ## Buscar uma taxa especifica
-    cache = {}
-    for data in df[coluna_data]:
-        chave = data.strftime("%Y-%m-%d")
+    return [taxa if snm != 0 else None for snm in df["snm"]]
 
-        if chave not in cache:
-            taxa_info = obter_taxa_por_data(codigo_serie, chave)
-            cache[chave] = (
-                transf_anual_mensal(taxa_info["valor"])
-                if taxa_info is not None
-                else None
-            )
+# Função para definir a taxa de mercado segundo as datas
+def taxas_de_mercado(tx_selecionadas: list, dt_contrato: str):
 
-        taxas.append(cache[chave])
+    taxas_mercado = {}
+    # codigos das tavas
+    cod_taxa = {
+        "20769": 20769,
+        "20770": 20770,
+    }
 
-    return taxas
+    for i in tx_selecionadas:
+        cod = cod_taxa.get(i)
+        if cod is not None:
+            tx_data = obter_taxa_por_data(cod, dt_contrato)
+            taxas_mercado[i] = tx_data["valor"]
+    
+    return taxas_mercado
 
 # Função para decidir qual função para utilizar
 def decidir_taxa(tx_opcoes, taxa_contrato, taxas_mercado=None):
@@ -654,15 +650,3 @@ def decidir_taxa(tx_opcoes, taxa_contrato, taxas_mercado=None):
         })
 
     return resultados
-
-
-op_taxa = ["Nenhuma", "20769", "20770", "Taxa limite - 12%"]
-
-taxa_info = obter_taxa_por_data(20770, "21/04/2024")
-
-taxa_info["valor"]
-
-taxas_mercado = {
-    "20769": 0.1402,
-    "20770": 0.0812
-}

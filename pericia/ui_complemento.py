@@ -3,7 +3,7 @@ from tkinter import ttk
 from datetime import datetime
 
 
-def criar_complemento_garantias(root, frame_garantias, font_style):
+def criar_complemento_garantias(root, frame_garantias, font_style, parametros_iniciais=None):
     vars_garantias = {}
 
     opcoes_garantias = [
@@ -11,8 +11,14 @@ def criar_complemento_garantias(root, frame_garantias, font_style):
         ("Penhor cedular", "penhor_cedular"),
         ("Hipoteca cedular", "hipoteca_cedular"),
     ]
+    # Parametros salvos
+    opcoes_salvas = parametros_iniciais.get("opcoes_garantias", [])
+    complementos_salvos = parametros_iniciais.get("complemento_garantias", {})
 
-    avales = []
+    avales = complementos_salvos.get("aval", [])
+    texto_penhor_salvo = complementos_salvos.get("penhor_cedular", "")
+    texto_hipoteca_salvo = complementos_salvos.get("hipoteca_cedular", "")
+
     nome_aval = tk.StringVar(master=root, value="")
     doc_aval = tk.StringVar(master=root, value="")
 
@@ -28,6 +34,11 @@ def criar_complemento_garantias(root, frame_garantias, font_style):
 
     lista_avales = tk.Listbox(frame_aval, height=4, width=60)
     lista_avales.grid(row=3, column=0, columnspan=2, sticky="ew", padx=4, pady=4)
+
+    for aval in avales:
+        nome = aval.get("nome", "")
+        documento = aval.get("documento", "")
+        lista_avales.insert(tk.END, f"{nome} - {documento}")
 
     def adicionar_aval():
         nome = nome_aval.get().strip()
@@ -65,9 +76,11 @@ def criar_complemento_garantias(root, frame_garantias, font_style):
     )
 
     txt_penhor = tk.Text(frame_penhor, width=60, height=4, font=font_style)
+    txt_penhor.insert("1.0", texto_penhor_salvo)
     txt_penhor.grid(row=0, column=0, padx=4, pady=4)
 
     txt_hipoteca = tk.Text(frame_hipoteca, width=60, height=4, font=font_style)
+    txt_hipoteca.insert("1.0", texto_hipoteca_salvo)
     txt_hipoteca.grid(row=0, column=0, padx=4, pady=4)
 
     def atualizar_campos_garantia():
@@ -87,7 +100,7 @@ def criar_complemento_garantias(root, frame_garantias, font_style):
             frame_hipoteca.grid_remove()
 
     for i, (rotulo, codigo) in enumerate(opcoes_garantias):
-        var_gar = tk.BooleanVar(master=root, value=False)
+        var_gar = tk.BooleanVar(master=root, value=codigo in opcoes_salvas)
 
         tk.Checkbutton(
             frame_garantias,
@@ -101,9 +114,7 @@ def criar_complemento_garantias(root, frame_garantias, font_style):
 
         vars_garantias[codigo] = var_gar
 
-    frame_aval.grid_remove()
-    frame_penhor.grid_remove()
-    frame_hipoteca.grid_remove()
+    atualizar_campos_garantia()
 
     def obter_resultado_garantias():
         return {
