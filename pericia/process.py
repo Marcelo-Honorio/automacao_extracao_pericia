@@ -2,7 +2,6 @@ import pandas as pd
 import pericia.ui as ui
 import pericia.calculations as cal
 
-from pathlib import Path
 from indices.bcb.service import atualizar_series_por_tx_mercado
 from pericia.models import ParametrosContrato
 from pericia.rules import decidir_capitalizacao
@@ -126,6 +125,8 @@ def process_df(df, stem, parent=None, out_root=None):
     parametros = parametros_obj.to_dict()
     #Decisao de capitalização
     parametros["decisao_capitalizacao"] = decisao_cap.to_dict()
+    #Taxa utilizada
+    parametros["taxa_utilizada"] = tx_utilizada
 
     ############################ EXCLUIR NO FUTURO #########################################
     #Resultado de pericia

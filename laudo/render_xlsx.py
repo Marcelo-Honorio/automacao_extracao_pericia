@@ -20,14 +20,14 @@ TEMPLATE_ROWS = 7
 
 def preencher_cabecalho(ws, dados):
     op = dados["contrato"]
-    ## TITILO COM TAXA LIMITADA
-    if dados["tx_mercado"]=="Taxa limite - 12%":
+    ## TITULO COM TAXA LIMITADA
+    if dados["taxa_utilizada"]["criterio"]=="TL":
         tx = "Taxa Limitada e "
     else:
         tx = ""
         
     # preenchimento 
-    ws["D4"] = dados["juros"]/100
+    ws["D4"] = dados["juros_ano"]/100
     ws["B3"] = dados["valor_liberado"]
     ws["A1"] = f"Recálculo da operação nº {op} - {tx}Capitalização Afastada "
 
