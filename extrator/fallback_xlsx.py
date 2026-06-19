@@ -50,13 +50,15 @@ def _br_to_float(v):
     Aceita também números já numéricos.
     """
     if v is None or (isinstance(v, float) and pd.isna(v)):
-        return None
+        return 0.0
+
     if isinstance(v, (int, float)):
         return float(v)
 
     s = str(v).strip()
+
     if s == "" or s == "-":
-        return None
+        return 0.0
 
     # remove R$ e espaços
     s = s.replace("R$", "").replace(" ", "")
@@ -65,10 +67,11 @@ def _br_to_float(v):
     # se vier no formato 1234.56 (ponto decimal), tentamos também
     if "," in s:
         s = s.replace(".", "").replace(",", ".")
+    
     try:
         return float(s)
     except Exception:
-        return None
+        return 0.0
 
 
 def _infer_tipo(debito_num, credito_num, historico: str = "") -> str:
@@ -146,36 +149,61 @@ def ler_ficha_grafica_manual_xlsx(
 
     # monta base padronizada
     out = pd.DataFrame()
-    out["Data"] = df[c_data].map(_to_date_str)
+
+    # Tipagem principal
+    out["Data"] = df[c_data].map(_to_date_str).fillna("").astype(str)
     out["Historico"] = df[c_hist].fillna("").astype(str).str.strip()
 
-    # Debito/Credito texto (se existir)
-    out["Debito"] = df[c_deb].fillna("").astype(str).str.strip() if c_deb else ""
-    out["Credito"] = df[c_cre].fillna("").astype(str).str.strip() if c_cre else ""
-
-    out["Saldo"] = df[c_saldo].fillna("").astype(str).str.strip() if c_saldo else ""
-    out["Saldo_geral"] = df[c_sg].fillna("").astype(str).str.strip() if c_sg else ""
-
-    # numéricos: prioriza *_num se vierem preenchidos
+    # Agora Debito, Credito e Saldo já saem como float
     if c_deb_num:
-        out["Debito_num"] = df[c_deb_num].map(_br_to_float)
+        out["Debito"] = df[c_deb_num].map(_br_to_float)
+    elif c_deb:
+        out["Debito"] = df[c_deb].map(_br_to_float)
     else:
-        out["Debito_num"] = out["Debito"].map(_br_to_float)
+        out["Debito"] = 0.0
 
     if c_cre_num:
-        out["Credito_num"] = df[c_cre_num].map(_br_to_float)
+        out["Credito"] = df[c_cre_num].map(_br_to_float)
+    elif c_cre:
+        out["Credito"] = df[c_cre].map(_br_to_float)
     else:
-        out["Credito_num"] = out["Credito"].map(_br_to_float)
+        out["Credito"] = 0.0
 
     if c_saldo_num:
-        out["Saldo_num"] = df[c_saldo_num].map(_br_to_float)
+        out["Saldo"] = df[c_saldo_num].map(_br_to_float)
+    elif c_saldo:
+        out["Saldo"] = df[c_saldo].map(_br_to_float)
     else:
-        out["Saldo_num"] = out["Saldo"].map(_br_to_float)
+        out["Saldo"] = 0.0
 
     if c_sg_num:
-        out["Saldo_geral_num"] = df[c_sg_num].map(_br_to_float)
+        out["Saldo_geral"] = df[c_sg_num].map(_br_to_float)
+    elif c_sg:
+        out["Saldo_geral"] = df[c_sg].map(_br_to_float)
     else:
-        out["Saldo_geral_num"] = out["Saldo_geral"].map(_br_to_float)
+        out["Saldo_geral"] = 0.0
+
+    # Mantém compatibilidade com o schema antigo
+    out["Debito_num"] = out["Debito"]
+    out["Credito_num"] = out["Credito"]
+    out["Saldo_num"] = out["Saldo"]
+    out["Saldo_geral_num"] = out["Saldo_geral"]
+
+    # Força tipagem final
+    out["Data"] = out["Data"].astype(str)
+    out["Historico"] = out["Historico"].astype(str)
+
+    for col in [
+        "Debito",
+        "Credito",
+        "Saldo",
+        "Saldo_geral",
+        "Debito_num",
+        "Credito_num",
+        "Saldo_num",
+        "Saldo_geral_num",
+    ]:
+        out[col] = pd.to_numeric(out[col], errors="coerce").fillna(0.0).astype(float)
 
     # metadata
     out["Arquivo"] = arquivo_origem if arquivo_origem else path_xlsx.stem
@@ -184,7 +212,8 @@ def ler_ficha_grafica_manual_xlsx(
 
     # tipo
     out["Tipo"] = [
-        _infer_tipo(d, c, h) for d, c, h in zip(out["Debito_num"], out["Credito_num"], out["Historico"])
+        _infer_tipo(d, c, h)
+        for d, c, h in zip(out["Debito_num"], out["Credito_num"], out["Historico"])
     ]
 
     # Ordenação por Data mantendo ordem original

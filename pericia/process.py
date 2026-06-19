@@ -52,7 +52,12 @@ def process_df(df, stem, parent=None, out_root=None):
 
     # Solicitar entrada manual
     if parametros_path.exists():
-        parametros_brutos = carregar_parametros(parametros_path)
+        parametros_salvos = carregar_parametros(parametros_path)
+        parametros_brutos = ui.create_input_with_options(
+            stem, 
+            parametros_iniciais=parametros_salvos,
+            parent=parent)
+        salvar_parametros(parametros_path, parametros_brutos)
     else:
         print("input de dados")
         parametros_brutos = ui.create_input_with_options(stem, parent=parent)
