@@ -45,7 +45,6 @@ def expandir_tabela(ws, n_linhas):
 # =========================
 # COPIAR FORMATAÇÃO
 # =========================
-
 def copiar_formatacao(ws, n_linhas):
 
     template_row = START_ROW
@@ -58,7 +57,6 @@ def copiar_formatacao(ws, n_linhas):
             destino = ws.cell(START_ROW + i, col)
 
             destino._style = copy(origem._style)
-
 
 # =========================
 # PREENCHER TABELA

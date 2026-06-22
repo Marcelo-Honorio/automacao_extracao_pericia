@@ -391,7 +391,7 @@ def saldo_recalculado(df, tx_mercado_opcao=["Nenhuma"]):
 
         if df.Historico[i] == "juros_encarg_add":
             dias_acum_ = df.loc[i - 1, "dias_acum"] / pd.Timedelta(days=1)
-            snm.append(sna[i - 1] / dias_acum_)
+            snm.append(abs(sna[i - 1] / dias_acum_)) ## MUDANÇAS FEITAS
         else:
             snm.append(0)
 
@@ -402,7 +402,7 @@ def saldo_recalculado(df, tx_mercado_opcao=["Nenhuma"]):
 
             return (((1 + taxa_aplicada) ** (dias_acum_ / 30)) - 1) * snm[i]
 
-        if snm[i] < 0:
+        if snm[i] > 0: # mudanças do sinal
             juros_recal.append(recalculo_juros(i))
         else:
             juros_recal.append(0)

@@ -310,7 +310,7 @@ def create_input_with_options(steam: str, parametros_iniciais=None, parent=None)
         parametros_iniciais=parametros_iniciais
     ) 
 
-    existe_aditivo = tk.StringVar(master=scroll_frame, value=parametros_iniciais.get("aditivo", "Não"))
+    existe_aditivo = tk.StringVar(master=scroll_frame, value="Sim" if parametros_iniciais.get("aditivo") else "Não")
     ttk.Label(scroll_frame, text="Existe aditivo?", font=font_style).grid(row=22, column=0, sticky="w")
     ttk.Combobox(scroll_frame, values=["Sim", "Não"], textvariable=existe_aditivo, font=font_style).grid(row=22, column=1, pady=2)
 
