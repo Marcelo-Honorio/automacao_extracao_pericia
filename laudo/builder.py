@@ -170,7 +170,7 @@ def transformar_input_para_contexto(dados_dict: dict, valores_por_arquivo):
             "valor_liberado": f.fmt_moeda(dados.get("valor_liberado", "")),
             "periodo": dados.get("periodo", ""),
             "estornos": dados.get("estornos", []),
-            "juros": f.fmt_moeda(dados.get("juros", "")),
+            "juros": f.fmt_moeda(dados.get("juros_ano", "")),
             "pasta": dados.get("pasta", ""),
             "valor_parcela": v_parcela if v_parcela > 0 else "Não pactuado",
             "numero_parcela": f.fmt_numero(dados.get("numero_parcela", "")),

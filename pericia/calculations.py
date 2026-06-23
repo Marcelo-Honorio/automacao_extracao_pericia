@@ -415,9 +415,9 @@ def saldo_recalculado(df, tx_mercado_opcao=["Nenhuma"]):
 
     p = len(snm)
     dias_acum_ = df.loc[p - 1, "dias_acum"] / pd.Timedelta(days=1)
-    snm.append(sna[p - 1] / dias_acum_)
+    snm.append(abs(sna[p - 1] / dias_acum_))
 
-    if snm[p] < 0:
+    if snm[p] > 0: # LINHA QUE MUDEI
         juros_recal.append(recalculo_juros(p))
     else:
         juros_recal.append(0)
