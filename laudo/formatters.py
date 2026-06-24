@@ -1,6 +1,6 @@
 
 def fmt_moeda(valor):
-    if valor is None:
+    if (valor is None) | (valor==0.0):
         return None
     s = f"{valor:,.2f}"
     return s.replace(",", "X").replace(".", ",").replace("X", ".")

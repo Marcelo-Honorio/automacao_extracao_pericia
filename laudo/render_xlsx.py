@@ -34,8 +34,6 @@ TEMPLATE_ROWS = 7
 #    if dados["decisao_capitalizacao"]["capitalizacao_valida"]==False:
 #        resultado.append("Afastamento da capitalização de juros remuneratórios de normalidade")
 #    if len(dados["estornos"]) > 0:
-        
-
 
 # =========================
 # PREENCHER CABEÇALHO
