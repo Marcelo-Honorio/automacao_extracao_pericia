@@ -2,16 +2,16 @@ from openpyxl import load_workbook
 from copy import copy
 from pathlib import Path
 import numpy as np
-import json
 
 # Informação de estorno
-from laudo.config import OPCOES_ESTORNO, ESTORNOS_MAP
-from laudo.builder import definir_estornos, transformar_input_para_contexto
-from pericia.oi_utils import carregar_parametros # Retirar mais tarde
-dados = {}
-arquivo = "C:\\Users\\auxil\\Downloads\\PDF_teste\\resultado\\parametros_inputs\\03- Ficha Gráfica - 1001729-45.2024.8.11.0091 - ARLEY BRUMATI.json"
-dados["03- Ficha Gráfica - 1001729-45.2024.8.11.0091 - ARLEY BRUMATI"] = carregar_parametros(arquivo)
-texto = definir_estornos(dados)
+#from laudo.config import OPCOES_ESTORNO, ESTORNOS_MAP
+#from laudo.builder import definir_estornos, transformar_input_para_contexto
+#from pericia.oi_utils import carregar_parametros # Retirar mais tarde
+
+#dados = {}
+#arquivo = "C:\\Users\\auxil\\Downloads\\PDF_teste\\resultado\\parametros_inputs\\03- Ficha Gráfica - 1001729-45.2024.8.11.0091 - ARLEY BRUMATI.json"
+#dados["03- Ficha Gráfica - 1001729-45.2024.8.11.0091 - ARLEY BRUMATI"] = carregar_parametros(arquivo)
+#texto = definir_estornos(dados)
 
 # =========================
 # CONFIGURAÇÕES
@@ -27,13 +27,13 @@ TEMPLATE_ROWS = 7
 # =========================================
 # FUNÇÔES PARA PREENCHER CABEÇALHO
 # =========================================
-def inf_recalculo(dados):
-    resultado = []
-    if dados["taxa_utilizada"]["criterio"]=="TL":
-        resultado.append("Limitação dos encargos remuneratórios de normalidade à Taxa Limitada de 12,00% a.a. para Crédito Rural")
-    if dados["decisao_capitalizacao"]["capitalizacao_valida"]==False:
-        resultado.append("Afastamento da capitalização de juros remuneratórios de normalidade")
-    if len(dados["estornos"]) > 0:
+#def inf_recalculo(dados):
+#    resultado = []
+#    if dados["taxa_utilizada"]["criterio"]=="TL":
+#        resultado.append("Limitação dos encargos remuneratórios de normalidade à Taxa Limitada de 12,00% a.a. para Crédito Rural")
+#    if dados["decisao_capitalizacao"]["capitalizacao_valida"]==False:
+#        resultado.append("Afastamento da capitalização de juros remuneratórios de normalidade")
+#    if len(dados["estornos"]) > 0:
         
 
 

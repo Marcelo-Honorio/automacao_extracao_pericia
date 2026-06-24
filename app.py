@@ -207,7 +207,7 @@ def main():
             Path(pasta),
             Path(out_root),
             parent=root
-        )
+            )
 
         contexto = transformar_input_para_contexto(parametros_contrato, estornos_por_arquivo)
         decisoes_irregularidades = gerar_decisoes_irregularidade(parametros_contrato)
