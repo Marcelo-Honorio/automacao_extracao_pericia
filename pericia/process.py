@@ -86,7 +86,10 @@ def process_df(df, stem, parent=None, out_root=None):
     df.loc[:, 'juros']=cal.juros(df)
     df.loc[:, "tx_mercado"] = cal.taxa_mercado(df, tx_mercado=tx_utilizada)
     df.loc[:, 'tx_anual'] = cal.tx_anual(df, tx_equivalente=parametros_obj.tx_equivalente)
-    df.loc[:, 'tx_mensal'] = cal.tx_mensal(df, tx_equivalente=parametros_obj.tx_equivalente)
+    df.loc[:, 'tx_mensal'] = cal.tx_mensal(
+                                            df, 
+                                            tx_equivalente=parametros_obj.tx_equivalente,
+                                            periodo=parametros_obj.periodo)
 
     # estornos escolhidos pelo usuário
     df.loc[:, 'estorno_credito'] = cal.estorno_credito(df, estornos=parametros_obj.estornos, decisao=decisao_cap)

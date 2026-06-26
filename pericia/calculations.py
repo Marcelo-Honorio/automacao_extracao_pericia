@@ -179,7 +179,7 @@ def tx_anual(df, tx_equivalente):
 
 
 # Função para calcular a taxa juros mensal
-def tx_mensal(df, tx_equivalente):
+def tx_mensal(df, tx_equivalente, periodo):
     valor = 0
     resultado = [0]
     for i in df[1:].index:
@@ -204,14 +204,21 @@ def tx_mensal(df, tx_equivalente):
             case "multa":
                 valor = df["juros"][i] / df["snm"][i]
             case "juros_mora":
-                ## Parametros para calculo de juros mora
-                data_trans = df[df.Historico == "trans_saldo"]["Data"].iloc[1]
-                valor_trans = df[df.Historico == "trans_saldo"]["Debito"].iloc[1]
-                data_mora = df.loc[i, "Data"]
-                valor_mora = df.loc[i, "Debito"]
-                dif = (data_mora - data_trans).days
-                ## calculo
-                valor = valor_mora / (dif * valor_trans) * 30
+                if periodo == "mensal":
+                    saldo = abs(df.loc[i - 1, "Saldo"])
+                    valor_mora = df.loc[i, "Debito"]
+                    dias_mes = df.loc[i - 1, "basecalculo_mes"]
+                    dias_acum = int(df.loc[i - 1, "dias_acum"].days)
+                    valor = (1 + (valor_mora/saldo))**((dias_mes/dias_acum) - 1)
+                else:
+                    ## Parametros para calculo de juros mora
+                    data_trans = df[df.Historico == "trans_saldo"]["Data"].iloc[1]
+                    valor_trans = df[df.Historico == "trans_saldo"]["Debito"].iloc[1]
+                    data_mora = df.loc[i, "Data"]
+                    valor_mora = df.loc[i, "Debito"]
+                    dif = (data_mora - data_trans).days
+                    ## calculo
+                    valor = valor_mora / (dif * valor_trans) * 30
             case _:
                 valor = 0
         resultado.append(valor)

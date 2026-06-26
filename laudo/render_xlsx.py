@@ -24,37 +24,80 @@ SHEET = "ANEXO 2"
 START_ROW = 13
 TEMPLATE_ROWS = 7
 
+MAPA_ESTORNOS = {
+    "seguro_penhor": "Seguro Penhor",
+    "seguro_vida": "Seguro de Vida",
+    "seguro_agricola": "Seguro Agrícola",
+    "juros_mora": "Juros de Mora",
+    "tarifa": "Tarifa de Estudo de Operações",
+}
 # =========================================
 # FUNÇÔES PARA PREENCHER CABEÇALHO
 # =========================================
-#def inf_recalculo(dados):
-#    resultado = []
-#    if dados["taxa_utilizada"]["criterio"]=="TL":
-#        resultado.append("Limitação dos encargos remuneratórios de normalidade à Taxa Limitada de 12,00% a.a. para Crédito Rural")
-#    if dados["decisao_capitalizacao"]["capitalizacao_valida"]==False:
-#        resultado.append("Afastamento da capitalização de juros remuneratórios de normalidade")
-#    if len(dados["estornos"]) > 0:
+def frase_estornos(estornos):
+    if not estornos:
+        return ""
+
+    itens = [MAPA_ESTORNOS[e] for e in estornos if e in MAPA_ESTORNOS]
+
+    if not itens:
+        return ""
+
+    if len(itens) == 1:
+        lista = itens[0]
+    elif len(itens) == 2:
+        lista = " e ".join(itens)
+    else:
+        lista = ", ".join(itens[:-1]) + " e " + itens[-1]
+
+    return f"Estorno da cobrança de {lista}"
+
+def inf_recalculo(dados):
+    resultado = []
+    if dados.get("taxa_utilizada", {}).get("criterio")=="TL":
+        resultado.append("Limitação dos encargos remuneratórios de normalidade à Taxa Limitada de 12,00% a.a. para Crédito Rural")
+    if not dados.get("decisao_capitalizacao", {}).get("capitalizacao_valida"):
+        resultado.append("Afastamento da capitalização de juros remuneratórios de normalidade")
+    if len(dados["estornos"]) > 0:
+        texto_estorno = frase_estornos(dados["estornos"])
+        resultado.append(texto_estorno)
+    if not dados["decisao_capitalizacao"]["capitalizacao_valida"]:    
+        resultado.append("Descaracterização da mora")
+
+    return resultado
+    
 
 # =========================
 # PREENCHER CABEÇALHO
 # =========================
 def preencher_cabecalho(ws, dados):
-    op = dados["contrato"]
-    ## TITULO COM TAXA LIMITADA
-    if dados["taxa_utilizada"]["criterio"]=="TL":
-        tx = "Taxa Limitada e "
-    else:
-        tx = ""
-        
-    # preenchimento 
-    ws["D4"] = dados["juros_ano"]/100
-    ws["B3"] = dados["valor_liberado"]
-    ws["A1"] = f"Recálculo da operação nº {op} - {tx}Capitalização Afastada "
+    op = dados.get("contrato", "")
+
+    criterio = dados.get("taxa_utilizada", {}).get("criterio")
+    tx = "Taxa Limitada e " if criterio == "TL" else ""
+
+    if criterio == "TL":
+        ws["P4"] = "Taxa Limitada:"
+        ws["Q4"] = "12,00%"
+        ws["Q5"] = "0,95%"
+        ws["R4"] = "a.a."
+        ws["R5"] = "a.m."
+
+    ws["D4"] = (dados.get("juros_ano") or 0) / 100
+    ws["B3"] = dados.get("valor_liberado") or 0
+    ws["A1"] = f"Recálculo da operação nº {op} - {tx}Capitalização Afastada"
+
+    lista_recalculo = inf_recalculo(dados.get("estornos", []))
+
+    for linha, item in enumerate(lista_recalculo, start=4):
+        ws[f"K{linha}"] = item
+
+    # Valores dos estornos
+
 
 # =========================
 # EXPANDIR TABELA
 # =========================
-
 def expandir_tabela(ws, n_linhas):
 
     if n_linhas > TEMPLATE_ROWS:
