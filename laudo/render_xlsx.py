@@ -58,20 +58,21 @@ def inf_recalculo(dados):
         resultado.append("Limitação dos encargos remuneratórios de normalidade à Taxa Limitada de 12,00% a.a. para Crédito Rural")
     if not dados.get("decisao_capitalizacao", {}).get("capitalizacao_valida"):
         resultado.append("Afastamento da capitalização de juros remuneratórios de normalidade")
-    if len(dados["estornos"]) > 0:
+    if len(dados.get("estornos", {})) > 0:
         texto_estorno = frase_estornos(dados["estornos"])
         resultado.append(texto_estorno)
-    if not dados["decisao_capitalizacao"]["capitalizacao_valida"]:    
+    if not dados.get("decisao_capitalizacao").get("capitalizacao_valida", {}):    
         resultado.append("Descaracterização da mora")
 
     return resultado
     
-
 # =========================
 # PREENCHER CABEÇALHO
 # =========================
 def preencher_cabecalho(ws, dados):
     op = dados.get("contrato", "")
+    # Valor IOF
+    ws["B4"] = dados.get("iof", "")
 
     criterio = dados.get("taxa_utilizada", {}).get("criterio")
     tx = "Taxa Limitada e " if criterio == "TL" else ""
@@ -87,13 +88,17 @@ def preencher_cabecalho(ws, dados):
     ws["B3"] = dados.get("valor_liberado") or 0
     ws["A1"] = f"Recálculo da operação nº {op} - {tx}Capitalização Afastada"
 
-    lista_recalculo = inf_recalculo(dados.get("estornos", []))
+    # Estornos
+    estornos = dados.get("estorno_apurado")
+    ws["B6"] = estornos.get("seguro_penhor", "")
+    ws["B7"] = estornos.get("seguro_vida", "")
+    ws["B8"] = estornos.get("seguro_agricola", "")
+    ws["D6"] = estornos.get("tarifa", "")
 
-    for linha, item in enumerate(lista_recalculo, start=4):
+    lista_recalculo = inf_recalculo(dados)
+
+    for linha, item in enumerate(lista_recalculo, start=3):
         ws[f"K{linha}"] = item
-
-    # Valores dos estornos
-
 
 # =========================
 # EXPANDIR TABELA

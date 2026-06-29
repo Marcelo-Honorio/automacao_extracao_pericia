@@ -149,6 +149,9 @@ def process_df(df, stem, parent=None, out_root=None):
     parametros.update(df[["SALDO", "saldo_recal"]].iloc[-1].to_dict())
     estorno_apurado = cal.estorno_resultado(df, estornos=parametros['estornos'])
 
+    parametros["estorno_apurado"] = estorno_apurado
+    parametros = parametros | cal.IOF_resultado(df)
+
     ## CORRIGINDO OS DIAS
     df.loc[:, "Data"] = [i.strftime("%d/%m/%Y") for i in df["Data"]]
     df.loc[:, "dias"] = [i.days for i in df.dias]

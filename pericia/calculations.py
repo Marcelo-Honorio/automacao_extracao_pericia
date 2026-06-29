@@ -518,6 +518,15 @@ def estorno_resultado(df, estornos):
 
     return resultado
 
+# Somar os IOF
+def IOF_resultado(df):
+    # calcular o IOF 
+    x = ["IOF", "iof"]
+    resultado = (
+        df[df.Historico.isin(x)].groupby("Historico")["Debito"].sum().to_dict()
+    )
+    return resultado
+
 # transformar taxa media de mercado anual em taxas mensal
 def transf_anual_mensal(taxa):
     taxa = taxa / 100
