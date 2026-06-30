@@ -24,6 +24,14 @@ SHEET = "ANEXO 2"
 START_ROW = 13
 TEMPLATE_ROWS = 7
 
+# Linhas do resumo no template
+RESUMO_SALDO_ORIGINAL = 24
+RESUMO_SALDO_RECAL = 25
+RESUMO_EXCESSO = 26
+
+# Linha original do resumo no template
+RESUMO_ROW_TEMPLATE = START_ROW + TEMPLATE_ROWS  # 20
+
 MAPA_ESTORNOS = {
     "seguro_penhor": "Seguro Penhor",
     "seguro_vida": "Seguro de Vida",
@@ -61,7 +69,7 @@ def inf_recalculo(dados):
     if len(dados.get("estornos", {})) > 0:
         texto_estorno = frase_estornos(dados["estornos"])
         resultado.append(texto_estorno)
-    if not dados.get("decisao_capitalizacao").get("capitalizacao_valida", {}):    
+    if not dados.get("decisao_capitalizacao", {}).get("capitalizacao_valida"):    
         resultado.append("Descaracterização da mora")
 
     return resultado
@@ -118,13 +126,16 @@ def copiar_formatacao(ws, n_linhas):
     template_row = START_ROW
 
     for i in range(n_linhas):
+        linha_destino = START_ROW + i
 
         for col in range(1, 24):
-
             origem = ws.cell(template_row, col)
-            destino = ws.cell(START_ROW + i, col)
+            destino = ws.cell(linha_destino, col)
 
             destino._style = copy(origem._style)
+
+            if origem.number_format:
+                destino.number_format = origem.number_format
 
 # =========================
 # PREENCHER TABELA
@@ -132,7 +143,7 @@ def copiar_formatacao(ws, n_linhas):
 def preencher_tabela(ws, df):
 
     #df.loc[:, 'Historico_estorno'] = historico_estorno(df, estornos=dados["estorno"])
-    df = df.replace({0: np.nan})
+    df = df.replace({0: np.nan}).reset_index(drop=True)
 
     for i, row in df.iterrows():
 
@@ -161,19 +172,33 @@ def preencher_tabela(ws, df):
         ws.cell(r, 22, row["juros_recal"])
 
 # =========================
-# PREENCHER RESUMO
+# ATUALIZAR FÓRMULAS DO RESUMO
 # =========================
+def atualizar_formulas_resumo(ws, n_linhas):
+    """
+    Atualiza o resumo localizado na coluna P.
 
-#def preencher_resumo(ws, resumo):
+    Template:
+        P24 -> Saldo Original
+        P25 -> Saldo Recalculado
+        P26 -> Excesso de Execução
+    """
 
-#    ws["H50"] = resumo["total_juros"]
-#    ws["H51"] = resumo["taxa_media"]
+    ultima_linha = START_ROW + n_linhas - 1
+
+    # deslocamento do resumo em relação ao template
+    desloc = max(0, n_linhas - TEMPLATE_ROWS)
+
+    ws[f"P{RESUMO_SALDO_ORIGINAL + desloc}"] = f"=E{ultima_linha}"
+    ws[f"P{RESUMO_SALDO_RECAL + desloc}"] = f"=R{ultima_linha}"
+    ws[f"P{RESUMO_EXCESSO + desloc}"] = (
+        f"=ABS(P{RESUMO_SALDO_RECAL + desloc}-P{RESUMO_SALDO_ORIGINAL + desloc})"
+        )
 
 
 # =========================
 # FUNÇÃO PRINCIPAL
 # =========================
-
 def gerar_relatorio(df, dados, stem, out_dir):
 
     # Gerar relatorio 
@@ -182,11 +207,15 @@ def gerar_relatorio(df, dados, stem, out_dir):
 
     preencher_cabecalho(ws, dados)
 
-    expandir_tabela(ws, len(df))
+    n_linhas = len(df)
 
-    copiar_formatacao(ws, len(df))
+    expandir_tabela(ws, n_linhas)
+
+    copiar_formatacao(ws, n_linhas)
 
     preencher_tabela(ws, df)
+
+    atualizar_formulas_resumo(ws, n_linhas)
 
     #preencher_resumo(ws, resumo)
     out_xlsx = out_dir / f"{stem}.xlsx"
