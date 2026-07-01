@@ -16,11 +16,35 @@ def criar_complemento_garantias(root, frame_garantias, font_style, parametros_in
     complementos_salvos = parametros_iniciais.get("complemento_garantias", {})
 
     avales = complementos_salvos.get("aval", [])
-    texto_penhor_salvo = complementos_salvos.get("penhor_cedular", "")
-    texto_hipoteca_salvo = complementos_salvos.get("hipoteca_cedular", "")
+    #texto_penhor_salvo = complementos_salvos.get("penhor_cedular", "")
+    #texto_hipoteca_salvo = complementos_salvos.get("hipoteca_cedular", "")
 
+    ######################################### MUDANÇAS #############################################
+    penhor_salvo = complementos_salvos.get("penhor_cedular", "")
+    hipoteca_salva = complementos_salvos.get("hipoteca_cedular", "")
+
+    if isinstance(penhor_salvo, dict):
+        texto_penhor_salvo = penhor_salvo.get("descricao", "")
+        grau_penhor_salvo = penhor_salvo.get("grau", "primeiro grau")
+    else:
+        texto_penhor_salvo = penhor_salvo
+        grau_penhor_salvo = "primeiro grau"
+
+    if isinstance(hipoteca_salva, dict):
+        texto_hipoteca_salvo = hipoteca_salva.get("descricao", "")
+        grau_hipoteca_salvo = hipoteca_salva.get("grau", "primeiro grau")
+    else:
+        texto_hipoteca_salvo = hipoteca_salva
+        grau_hipoteca_salvo = "primeiro grau"
+
+    #######################################################################################################
     nome_aval = tk.StringVar(master=root, value="")
     doc_aval = tk.StringVar(master=root, value="")
+
+    ########################################### MUDANÇAS ##################################################
+    grau_penhor = tk.StringVar(master=root, value=grau_penhor_salvo)
+    grau_hipoteca = tk.StringVar(master=root, value=grau_hipoteca_salvo)
+    #######################################################################################################
 
     frame_aval = ttk.LabelFrame(frame_garantias, text="Avalista(s)")
     frame_penhor = ttk.LabelFrame(frame_garantias, text="Descrição do Penhor Cedular")
@@ -75,14 +99,51 @@ def criar_complemento_garantias(root, frame_garantias, font_style, parametros_in
         row=2, column=1, sticky="w", padx=4, pady=4
     )
 
+    #txt_penhor = tk.Text(frame_penhor, width=60, height=4, font=font_style)
+    #txt_penhor.insert("1.0", texto_penhor_salvo)
+    #txt_penhor.grid(row=0, column=0, padx=4, pady=4)
+    ttk.Label(frame_penhor, text="Grau:", font=font_style).grid(row=0, column=0, sticky="w", padx=4, pady=2)
+    ttk.Combobox(
+        frame_penhor,
+        textvariable=grau_penhor,
+        values=[
+            "primeiro grau",
+            "segundo grau",
+            "terceiro grau",
+            "grau não informado"
+        ],
+        state="readonly",
+        width=22,
+        font=font_style
+    ).grid(row=0, column=1, sticky="w", padx=4, pady=2)
+
     txt_penhor = tk.Text(frame_penhor, width=60, height=4, font=font_style)
     txt_penhor.insert("1.0", texto_penhor_salvo)
-    txt_penhor.grid(row=0, column=0, padx=4, pady=4)
+    txt_penhor.grid(row=1, column=0, columnspan=2, padx=4, pady=4)
+    
+    #txt_hipoteca = tk.Text(frame_hipoteca, width=60, height=4, font=font_style)
+    #txt_hipoteca.insert("1.0", texto_hipoteca_salvo)
+    #txt_hipoteca.grid(row=0, column=0, padx=4, pady=4)
+    ttk.Label(frame_hipoteca, text="Grau:", font=font_style).grid(row=0, column=0, sticky="w", padx=4, pady=2)
+    ttk.Combobox(
+        frame_hipoteca,
+        textvariable=grau_hipoteca,
+        values=[
+            "primeiro grau",
+            "segundo grau",
+            "terceiro grau",
+            "grau não informado"
+        ],
+        state="readonly",
+        width=22,
+        font=font_style
+    ).grid(row=0, column=1, sticky="w", padx=4, pady=2)
 
     txt_hipoteca = tk.Text(frame_hipoteca, width=60, height=4, font=font_style)
     txt_hipoteca.insert("1.0", texto_hipoteca_salvo)
-    txt_hipoteca.grid(row=0, column=0, padx=4, pady=4)
+    txt_hipoteca.grid(row=1, column=0, columnspan=2, padx=4, pady=4)
 
+    #########################################################################################
     def atualizar_campos_garantia():
         if vars_garantias["aval"].get():
             frame_aval.grid(row=3, column=0, columnspan=2, sticky="ew", padx=4, pady=6)
@@ -123,11 +184,17 @@ def criar_complemento_garantias(root, frame_garantias, font_style, parametros_in
                 if var.get()
             ],
             "complemento_garantias": {
-                "aval": avales,
-                "penhor_cedular": txt_penhor.get("1.0", "end").strip(),
-                "hipoteca_cedular": txt_hipoteca.get("1.0", "end").strip()
+            "aval": avales,
+            "penhor_cedular": {
+                "grau": grau_penhor.get(),
+                "descricao": txt_penhor.get("1.0", "end").strip()
+            },
+            "hipoteca_cedular": {
+                "grau": grau_hipoteca.get(),
+                "descricao": txt_hipoteca.get("1.0", "end").strip()
             }
         }
+    }
 
     return obter_resultado_garantias
 

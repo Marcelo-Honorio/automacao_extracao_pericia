@@ -218,6 +218,9 @@ def gerar_relatorio(df, dados, stem, out_dir):
     atualizar_formulas_resumo(ws, n_linhas)
 
     #preencher_resumo(ws, resumo)
+    nome = dados["cliente"].upper()
+    
+
     out_xlsx = out_dir / f"{stem}.xlsx"
 
     wb.save(out_xlsx)
