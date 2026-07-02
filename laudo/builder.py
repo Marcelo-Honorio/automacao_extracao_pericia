@@ -154,11 +154,14 @@ def transformar_input_para_contexto(dados_dict: dict, valores_por_arquivo):
     agente = None
     cliente = None
     autor = None
+    auto_n = None
     instrumento = None
     
     for nome_arquivo, dados in dados_dict.items():
         #if substantivo is None:
-        #    substantivo = dados.get("substantivo", "")        
+        #    substantivo = dados.get("substantivo", "")    
+        if auto_n is None:
+            auto_n = dados.get("auto", "")
         if agente is None:
             agente = dados.get("agente", "")
             produtor_a = definir_produtor(dados.get("agente"))
@@ -211,6 +214,7 @@ def transformar_input_para_contexto(dados_dict: dict, valores_por_arquivo):
         contratos.append(contrato_item)
 
     return {
+        "auto": auto_n or "",
         "autor": autor or "",
         "instrumento": instrumento or "",
         "substantivo": substantivo or "",

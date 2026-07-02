@@ -19,7 +19,7 @@ def read_table_from_file(file_path):
         print(f"Erro ao ler o arquivo {file_path}: {e}")
 
 
-def process_df(df, stem, parent=None, out_root=None):
+def process_df(df, stem, parent=None, out_root=None, pasta=None):
     #print(f"Processando arquivo:{}")
     print("ENTROU EM process_df")
     print("parent =", parent)
@@ -60,7 +60,7 @@ def process_df(df, stem, parent=None, out_root=None):
         salvar_parametros(parametros_path, parametros_brutos)
     else:
         print("input de dados")
-        parametros_brutos = ui.create_input_with_options(stem, parent=parent)
+        parametros_brutos = ui.create_input_with_options(stem, parent=parent, pasta=pasta)
         salvar_parametros(parametros_path, parametros_brutos)
         print("DEPOIS DA JANELA")
 
@@ -158,3 +158,4 @@ def process_df(df, stem, parent=None, out_root=None):
     df.loc[:, "dias_acum"] = [i.days for i in df.dias_acum]
     
     return df, parametros, estorno_apurado
+

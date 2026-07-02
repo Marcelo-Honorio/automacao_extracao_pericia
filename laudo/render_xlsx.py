@@ -219,8 +219,8 @@ def gerar_relatorio(df, dados, stem, out_dir):
 
     #preencher_resumo(ws, resumo)
     nome = dados["cliente"].upper()
+    auto_n = dados["auto"]
     
-
-    out_xlsx = out_dir / f"{stem}.xlsx"
+    out_xlsx = out_dir / f"Plan-{auto_n} - {nome}.xlsx"
 
     wb.save(out_xlsx)

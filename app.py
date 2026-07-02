@@ -37,6 +37,7 @@ def gerar_template_manual_xlsx(path_out: Path):
     df.to_excel(path_out, index=False)
 
 
+
 def processar_pasta(pasta: Path, out_root: Path, parent=None):
     # bibliotecas
     import pandas as pd
@@ -48,7 +49,6 @@ def processar_pasta(pasta: Path, out_root: Path, parent=None):
     from extrator.fallback_xlsx import ler_ficha_grafica_manual_xlsx
     from extrator.validation import rodar_validacoes_e_decidir
     from pericia.process import process_df
-    from pericia.oi_utils import salvar_resultados
     from laudo.render_xlsx import gerar_relatorio
 
     out_dir = out_root
@@ -107,8 +107,8 @@ def processar_pasta(pasta: Path, out_root: Path, parent=None):
 
             # rodas e salva relatório de validação
             decisao = rodar_validacoes_e_decidir(df)
-            with open(out_dir / "decisao.txt", 'w') as file:
-                json.dump(decisao[1], file, indent=4)
+            #with open(out_dir / "decisao.txt", 'w') as file:
+            #    json.dump(decisao[1], file, indent=4)
 
             # bloqueia cálculo se necessário
             if not decisao[1]["pode_calcular"]:
@@ -131,8 +131,11 @@ def processar_pasta(pasta: Path, out_root: Path, parent=None):
             # =============================
             # AQUI entra o cálculo de pericia
             # =============================
-            df_process, parametros, estorno_apurado  = process_df(df, stem, parent=parent, out_root=out_root)
-            salvar_resultados(df_process, parametros, out_dir, stem) #Salvando os resultados da pericia (CORRIGIR ESSE PONTO)
+            df_process, parametros, estorno_apurado  = process_df(df, stem, parent=parent, out_root=out_root, pasta=pasta)
+            # Salvar resultado
+            with open(out_dir /"parametros_inputs"/"decisao.txt", 'w') as file:
+                json.dump(decisao[1], file, indent=4)
+            #salvar_resultados(df_process, parametros, out_dir, stem) #Salvando os resultados da pericia (CORRIGIR ESSE PONTO)
 
             # salvar os parametros de todos os contratos
             parametros_contrato[stem] = parametros
@@ -169,7 +172,7 @@ def processar_pasta(pasta: Path, out_root: Path, parent=None):
 
     # salva status.csv
     df_status = pd.DataFrame(status_rows).sort_values(["status", "stem"])
-    df_status.to_csv(out_dir / "status.csv", index=False, sep=";", encoding="utf-8-sig")
+    df_status.to_csv(out_dir / "parametros_inputs" / "status.csv", index=False, sep=";", encoding="utf-8-sig")
 
     # salva consolidado
     df_all = pd.concat(dfs_consolidados, ignore_index=True) if dfs_consolidados else pd.DataFrame()

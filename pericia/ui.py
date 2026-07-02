@@ -3,7 +3,7 @@ from tkinter import ttk, messagebox
 from pericia.ui_complemento import criar_complemento_garantias, normalizar_data
 import re
 
-def create_input_with_options(steam: str, parametros_iniciais=None, parent=None):
+def create_input_with_options(steam: str, parametros_iniciais=None, parent=None, pasta=None):
     parametros_iniciais = parametros_iniciais or {}
     resultado = {}
 
@@ -19,7 +19,7 @@ def create_input_with_options(steam: str, parametros_iniciais=None, parent=None)
     def extrair_numero_processo(nome_arquivo):
         padrao = r"\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}"
 
-        resultado = re.search(padrao, nome_arquivo)
+        resultado = re.search(padrao, str(nome_arquivo))
 
         if resultado:
             return resultado.group(0)
@@ -138,7 +138,7 @@ def create_input_with_options(steam: str, parametros_iniciais=None, parent=None)
     ttk.Label(scroll_frame, text=f"Arquivo: {steam}", font=16).grid(row=0, column=0, columnspan=2, pady=5)
 
     ttk.Label(scroll_frame, text="Autos n°:", font=font_style).grid(row=1, column=0, sticky="w")
-    auto_n = extrair_numero_processo(steam)
+    auto_n = extrair_numero_processo(pasta)
     auto_n = tk.StringVar(master=scroll_frame, value=parametros_iniciais.get("auto", auto_n))
     ttk.Entry(scroll_frame, textvariable=auto_n, font=font_style).grid(row=1, column=1, pady=2)
 
