@@ -68,6 +68,12 @@ def process_df(df, stem, parent=None, out_root=None, pasta=None):
     parametros_obj.validar()
 
     decisao_cap = decidir_capitalizacao(parametros_obj.capitalizacao)
+
+    # Imprimir a decisão
+    if not ui.confirmar_decisao_capitalizacao(decisao_cap, parent=parent):
+        raise ValueError("Processamento interrompido pelo usuário após decisão de capitalização.")
+
+
     atualizar_series_por_tx_mercado(parametros_obj.tx_mercado) 
 
     taxas_mercado = cal.taxas_de_mercado(parametros_obj.tx_mercado, parametros_obj.data_contrato)
@@ -155,7 +161,8 @@ def process_df(df, stem, parent=None, out_root=None, pasta=None):
     ## CORRIGINDO OS DIAS
     df.loc[:, "Data"] = [i.strftime("%d/%m/%Y") for i in df["Data"]]
     df.loc[:, "dias"] = [i.days for i in df.dias]
-    df.loc[:, "dias_acum"] = [i.days for i in df.dias_acum]
+    #df.loc[:, "dias_acum"] = [i.days for i in df.dias_acum]
+    df.loc[:, "dias_acum"] = df["dias_acum"].dt.days
     
     return df, parametros, estorno_apurado
 

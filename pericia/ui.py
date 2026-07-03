@@ -388,3 +388,23 @@ def create_input_with_options(steam: str, parametros_iniciais=None, parent=None,
     root.mainloop()
 
     return resultado
+
+# Imprimir a decisão sobre a capitalização
+def confirmar_decisao_capitalizacao(decisao_cap, parent=None):
+    texto = (
+        "DECISÃO SOBRE CAPITALIZAÇÃO\n\n"
+        f"Capitalização válida: {decisao_cap.capitalizacao_valida}\n"
+        f"Regime aplicado: {decisao_cap.aplicar_regime}\n"
+        f"Estornar capitalização: {decisao_cap.aplicar_estorno_capitalizacao}\n\n"
+        "Fundamentos:\n"
+        + "\n".join(f"- {f}" for f in decisao_cap.fundamentos)
+        + "\n\nObservações para o laudo:\n"
+        + "\n".join(f"- {o}" for o in decisao_cap.observacoes_laudo)
+        + "\n\nDeseja prosseguir com essa decisão?"
+    )
+
+    return messagebox.askyesno(
+        "Decisão de Capitalização",
+        texto,
+        parent=parent
+    )

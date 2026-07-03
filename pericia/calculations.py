@@ -45,7 +45,7 @@ def dias_acum(df):
         else:
             valor = valor + df.loc[i, "dias"]
 
-        resultado.append(valor)
+        resultado.append(valor.days)
     return resultado
 
 

@@ -1,5 +1,7 @@
 import json
 from pathlib import Path
+from tkinter import ttk
+import tkinter as tk
 
 
 def salvar_parametros(path: Path, parametros: dict):
@@ -17,3 +19,65 @@ def salvar_resultados(df, parametros, out_dir, stem):
         json.dump(parametros, f, indent=4)
 
     df.to_excel(out_dir/"ESPELHO_do_CALCULO.xlsx", index=False)
+
+## Criar uma pequena janela com um Entry e um botão "Pesquisar"
+def localizar_pasta(root, pasta_base: Path, titulo="Localizar pasta"):
+    janela = tk.Toplevel(root)
+    janela.title(titulo)
+    janela.resizable(False, False)
+
+    resultado = {"path": None}
+
+    ttk.Label(
+        janela,
+        text="Número ou parte do nome da pasta:"
+    ).grid(row=0, column=0, padx=10, pady=(10, 2), sticky="w")
+
+    busca = tk.StringVar()
+
+    ttk.Entry(
+        janela,
+        textvariable=busca,
+        width=30
+    ).grid(row=1, column=0, padx=10)
+
+    lista = tk.Listbox(janela, width=70, height=12)
+    lista.grid(row=2, column=0, padx=10, pady=10)
+
+    def pesquisar():
+
+        lista.delete(0, tk.END)
+
+        termo = busca.get().lower().strip()
+
+        if not termo:
+            return
+
+        encontrados = []
+
+        for pasta in pasta_base.rglob("*"):
+            if pasta.is_dir() and termo in pasta.name.lower():
+                encontrados.append(pasta)
+
+        for pasta in encontrados:
+            lista.insert(tk.END, str(pasta))
+
+    def selecionar():
+        if not lista.curselection():
+            return
+
+        resultado["path"] = Path(lista.get(lista.curselection()[0]))
+        janela.destroy()
+
+    ttk.Button(janela, text="Pesquisar", command=pesquisar).grid(
+        row=1, column=1, padx=5
+    )
+
+    ttk.Button(janela, text="Selecionar", command=selecionar).grid(
+        row=3, column=0, pady=(0, 10)
+    )
+
+    janela.grab_set()
+    root.wait_window(janela)
+
+    return resultado["path"]

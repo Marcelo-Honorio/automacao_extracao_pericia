@@ -191,6 +191,7 @@ def main():
     from laudo.builder import transformar_input_para_contexto
     from laudo.render_docx import gerar_laudo_docx
     from laudo.estrutura_laudo import gerar_decisoes_irregularidade
+    from pericia.oi_utils import localizar_pasta
     
     root = tk.Tk()
     root.withdraw()
@@ -198,6 +199,7 @@ def main():
     try:
         messagebox.showinfo("AutoPericia", "Selecione a pasta contendo os PDFs.", parent=root)
         pasta = filedialog.askdirectory(title="Selecione a pasta com PDFs", parent=root)
+        
         if not pasta:
             return
 

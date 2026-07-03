@@ -143,7 +143,8 @@ def copiar_formatacao(ws, n_linhas):
 def preencher_tabela(ws, df):
 
     #df.loc[:, 'Historico_estorno'] = historico_estorno(df, estornos=dados["estorno"])
-    df = df.replace({0: np.nan}).reset_index(drop=True)
+    #df = df.replace({0: np.nan}).reset_index(drop=True)
+    df = df.mask(df.eq(0)).reset_index(drop=True)
 
     for i, row in df.iterrows():
 

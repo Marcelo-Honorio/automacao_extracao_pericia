@@ -146,3 +146,35 @@ class ParametrosContrato:
             aditivo=data.get("aditivo", False),
             capitalizacao=capitalizacao,
         )
+
+    ## Extrair dados do contrato
+    @classmethod
+    def from_pdf(cls, path_pdf) -> "ParametrosContrato":
+        from contrato.render import ContratoPDF
+        from contrato.extractor import ExtratorContrato
+
+        contrato = ContratoPDF(path_pdf)
+        dados = ExtratorContrato(contrato).to_dict()
+
+        defaults = {
+            "auto": "",
+            "autor": "",
+            "cliente": "",
+            "agente": "do réu",
+            "periodo": "mensal",
+            "estornos": [],
+            "tx_mercado": ["Nenhuma"],
+            "valor_parcela": 0.0,
+            "valor_nominal_parcela": 0.0,
+            "numero_parcela": 0,
+            "data_pagamento": "",
+            "tx_equivalente": "diaria",
+            "opcoes_inadimplento": [],
+            "opcoes_garantias": [],
+            "complemento_garantias": {},
+            "aditivo": False,
+        }
+
+        defaults.update(dados)
+
+        return cls.from_dict(defaults)
