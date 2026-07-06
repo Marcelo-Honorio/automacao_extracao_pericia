@@ -45,7 +45,7 @@ def dias_acum(df):
         else:
             valor = valor + df.loc[i, "dias"]
 
-        resultado.append(valor.days)
+        resultado.append(valor) # valor.days
     return resultado
 
 
@@ -208,8 +208,8 @@ def tx_mensal(df, tx_equivalente, periodo):
                     saldo = abs(df.loc[i - 1, "Saldo"])
                     valor_mora = df.loc[i, "Debito"]
                     dias_mes = df.loc[i - 1, "basecalculo_mes"]
-                    dias_acum = int(df.loc[i - 1, "dias_acum"].days)
-                    valor = (1 + (valor_mora/saldo))**((dias_mes/dias_acum) - 1)
+                    dias_acum = int(df.loc[i - 2, "dias_acum"].days)
+                    valor = ((1 + (valor_mora/saldo))**((dias_mes/dias_acum) - 1))/100
                 else:
                     ## Parametros para calculo de juros mora
                     data_trans = df[df.Historico == "trans_saldo"]["Data"].iloc[1]
@@ -529,7 +529,7 @@ def IOF_resultado(df):
 
 # transformar taxa media de mercado anual em taxas mensal
 def transf_anual_mensal(taxa):
-    taxa = taxa / 100
+    taxa = taxa  #/100
     valor = (1 + taxa) ** (1 / 12) - 1
     return valor
 
@@ -548,7 +548,6 @@ def taxa_mercado(df: pd.DataFrame, tx_mercado:dict, coluna_data: str = "Data") -
         "tmm": 13.83
     }
     """
-
     df = df.copy()
 
     if coluna_data not in df.columns:

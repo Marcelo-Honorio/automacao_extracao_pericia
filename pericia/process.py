@@ -79,7 +79,7 @@ def process_df(df, stem, parent=None, out_root=None, pasta=None):
     taxas_mercado = cal.taxas_de_mercado(parametros_obj.tx_mercado, parametros_obj.data_contrato)
     taxas_parametros = cal.decidir_taxa(parametros_obj.tx_mercado, parametros_obj.juros_ano, taxas_mercado)
     tx_utilizada = min(taxas_parametros, key=lambda x: x['taxa'])
-               
+            
     # sequência do cálculo
     df.loc[:, "Historico"] = df["Historico"].apply(cal.classificar)
     df.loc[:, 'dias']=cal.dias(df["Data"])
