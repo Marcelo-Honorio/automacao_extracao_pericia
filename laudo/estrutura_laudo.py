@@ -61,16 +61,19 @@ def normalizar_texto(valor):
     return str(valor).strip().lower()
 
 def gerar_decisoes_periciais(dados: dict) -> dict:
-    capitalizacao = dados.get("Capitalização", {})
     # lista unica de estornos
     estornos = list({
             estorno
             for valores in dados.values()
             for estorno in valores.get("estornos", [])
     })
+
+    dados = dados.values()
+    capitalizacao = dados.get("capitalizacao", {})
+
     inadimplemento = dados.get("opcoes_inadimplento", []) or []
 
-    tx_mercado = normalizar_texto(dados.get("tx_mercado"))
+    #tx_mercado = normalizar_texto(dados.get("tx_mercado"))
     periodo_capitalizacao = normalizar_texto(
         capitalizacao.get("periodicidade_capitalizacao")
     )
@@ -80,6 +83,12 @@ def gerar_decisoes_periciais(dados: dict) -> dict:
 
     existe_capitalizacao = capitalizacao.get("existe_capitalizacao") is True
 
+    # Decisão de taxa utilizada
+    decisao_tx = dados.get("taxa_utilizada", {})
+    tx_mercado = []
+    tx_mercado.extend([decisao_tx.get("codigo")])
+    tx_mercado.extend([decisao_tx.get("criterio")])
+    
     return {
         # Futuro — por enquanto sempre falso
         "juros_carencia_sem_datas_claras": False,
@@ -91,7 +100,7 @@ def gerar_decisoes_periciais(dados: dict) -> dict:
         # Encargos remuneratórios
         "taxa_superior_media_mercado": sum(["20769" in i for i in tx_mercado])>0,
         "juros_superiores_plano_safra": sum([("20769" in i or "20770" in i) for i in tx_mercado])>0,
-        "juros_superiores_12_aa_credito_rural": sum(["12%" in i for i in tx_mercado])>0,
+        "juros_superiores_12_aa_credito_rural": sum([('Taxa limite - 12%' in i or "TL" in i) for i in tx_mercado])>0,
 
         # Resultado da perícia — alimentar futuramente por cálculo
         "taxa_superior_contrato_originario": dados.get("juros_superior_contrato_originario") is True,

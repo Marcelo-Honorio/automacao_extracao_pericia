@@ -210,3 +210,24 @@ def normalizar_data(valor):
         return data.strftime("%d/%m/%Y")
     except ValueError:
         raise ValueError(f"Data inválida: {valor}. Use o formato dd/mm/aaaa.")
+
+# Função para normalizar a taxa anual
+def normalizar_taxa(valor):
+    """
+    Garante que a taxa seja representada em percentual.
+
+    Exemplos:
+        0.156 -> 15.6
+        15.6  -> 15.6
+        120   -> 120
+    """
+    if valor is None:
+        return 0.0
+
+    valor = float(valor)
+
+    # considera decimal apenas entre -1 e 1
+    if abs(valor) <= 1:
+        valor *= 100
+
+    return valor

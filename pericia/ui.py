@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-from pericia.ui_complemento import criar_complemento_garantias, normalizar_data
+from pericia.ui_complemento import criar_complemento_garantias, normalizar_data, normalizar_taxa
 import re
 
 def create_input_with_options(steam: str, parametros_iniciais=None, parent=None, pasta=None):
@@ -228,7 +228,7 @@ def create_input_with_options(steam: str, parametros_iniciais=None, parent=None,
     ).grid(row=10, column=1, pady=2)
 
     ttk.Label(scroll_frame, text="Taxa de juros efetiva (a.a):", font=font_style).grid(row=11, column=0, sticky="w")
-    juros_ano = tk.DoubleVar(master=scroll_frame, value=parametros_iniciais.get("juros_ano", 0.00))
+    juros_ano = tk.DoubleVar(master=scroll_frame, value=normalizar_taxa(parametros_iniciais.get("juros_ano", 0.00)))
     ttk.Entry(scroll_frame, textvariable=juros_ano, font=font_style).grid(row=11, column=1, pady=2)
 
 ###########################################################################################################################################
