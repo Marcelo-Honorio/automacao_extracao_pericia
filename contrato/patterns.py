@@ -1,8 +1,19 @@
 PADROES_INSTRUMENTO_TITULO = [
-    r"\bC[ÉE]DULA\s+RURAL\s+PIGNORAT[IÍ]CIA\s+E\s+HIPOTEC[ÁA]RIA\b",
-    r"\bC[ÉE]DULA\s+RURAL\s+PIGNORAT[IÍ]CIA\b",
-    r"\bC[ÉE]DULA\s+RURAL\s+HIPOTEC[ÁA]RIA\b",
-    r"\bC[ÉE]DULA\s+DE\s+CR[ÉE]DITO\s+BANC[ÁA]RIO\b",
+    ( 
+        r"\bC[ÉE]DULA\s+RURAL\s+PIGNORAT[IÍ1]CIA\s+E\s+HIPOTEC[ÁA]RIA\b", "Cédula Rural Pignoratícia e Hipotecária",
+    ),
+    (
+        r"\bC[ÉE]DULA\s+RURAL\s+PIGNORAT[IÍ1]CIA\b", "Cédula Rural Pignoratícia",
+    ),
+    (
+        r"\bC[ÉE]DULA\s+RURAL\s+HIPOTEC[ÁA]RIA\b", "Cédula Rural Hipotecária",
+    ),
+    (
+        r"\bC[ÉE]DULA\s+DE\s+CR[ÉE]DITO\s+BANC[ÁA]RIO\b", "Cédula de Crédito Bancário",
+    ),
+    (
+        r"\bCONTRATO\s+DE\s+ABERTURA\s+DE\s+CR[ÉE]DITO\b", "Contrato de Abertura de Crédito",
+    ),
 ]
 
 PADROES_CONTRATO = [

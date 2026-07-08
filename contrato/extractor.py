@@ -51,6 +51,11 @@ class ExtratorContrato:
 
         return None
 
+    def _texto_paginas(self, paginas=2):
+        return "\n".join(
+            pagina.texto for pagina in self.contrato.paginas[:paginas]
+        )
+    
     def extrair_numero_contrato(self):
         return self._buscar_primeiro(PADROES_CONTRATO)
 
@@ -86,14 +91,11 @@ class ExtratorContrato:
         return normalizar_data(data) if data else ""
 
     def extrair_instrumento(self):
-        texto_inicio = "\n".join(
-            pagina.texto for pagina in self.contrato.paginas[:2]
-        )
+        texto_inicio = self._texto_paginas(paginas=2)
 
-        for padrao in PADROES_INSTRUMENTO_TITULO:
-            m = re.search(padrao, texto_inicio, flags=re.I)
-            if m:
-                return m.group(0).title()
+        for padrao, retorno in PADROES_INSTRUMENTO_TITULO:
+            if re.search(padrao, texto_inicio, flags=re.I):
+                return retorno
 
         return ""
 
@@ -153,6 +155,9 @@ class ExtratorContrato:
         }
 
     def extrair_campos(self) -> dict:
+        juros_ano = self.extrair_juros_ano() or 0.0
+        juros_mes = self.extrair_juros_mes() or 0.0
+
         return {
             "instrumento": self.extrair_instrumento() or "",
             "contrato": self.extrair_numero_contrato() or "",
@@ -160,8 +165,8 @@ class ExtratorContrato:
             "data_contrato": self.extrair_data_contrato() or "",
             "data_vencimento": self.extrair_data_vencimento() or "",
             "finalidade_op": self.extrair_finalidade() or "",
-            "juros_ano": self.extrair_juros_ano() or 0.0,
-            "juros_mes": self.extrair_juros_mes() or 0.0,
+            "juros_ano": juros_ano,
+            "juros_mes": juros_mes,
             "capitalizacao": self.extrair_capitalizacao(),
         }
 

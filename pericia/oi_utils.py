@@ -3,6 +3,9 @@ from pathlib import Path
 from tkinter import ttk
 import tkinter as tk
 
+from contrato.finder import localizar_contrato_pdf
+from contrato.extractor import extrair_parametros_contrato
+
 
 def salvar_parametros(path: Path, parametros: dict):
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -81,3 +84,59 @@ def localizar_pasta(root, pasta_base: Path, titulo="Localizar pasta"):
     root.wait_window(janela)
 
     return resultado["path"]
+
+## Informações extraidas de contrato
+def valor_preenchido(valor):
+    return valor not in (None, "", [], {})
+
+
+def mesclar_parametros(defaults=None, contrato=None, salvos=None):
+    """
+    Prioridade:
+    1. defaults
+    2. contrato
+    3. salvos
+
+    Ou seja, salvos sobrescrevem contrato,
+    e contrato sobrescreve defaults.
+    """
+
+    resultado = {}
+
+    for origem in (defaults, contrato, salvos):
+        if not origem:
+            continue
+
+        for chave, valor in origem.items():
+            if valor_preenchido(valor):
+                resultado[chave] = valor
+
+    return resultado
+
+# Carregar os parametros do contrato ou já salvos
+def parametros_iniciais(parametros_path=None, pasta=None):
+    parametros_salvos = {}
+    parametros_contrato = {}
+
+    if parametros_path.exists():
+        parametros_salvos = carregar_parametros(parametros_path)
+
+    try:
+        if pasta:
+            contrato_pdf = localizar_contrato_pdf(pasta)
+
+            if contrato_pdf:
+                parametros_contrato = extrair_parametros_contrato(contrato_pdf)
+                print(f"[CONTRATO] Dados extraídos de: {contrato_pdf.name}")
+            else:
+                print("[CONTRATO] Nenhum contrato PDF localizado.")
+
+    except Exception as e:
+        print(f"[CONTRATO] Erro ao extrair dados do contrato: {e}")
+
+    parametros_iniciais = mesclar_parametros(
+        contrato=parametros_contrato,
+        salvos=parametros_salvos,
+    )
+
+    return parametros_iniciais

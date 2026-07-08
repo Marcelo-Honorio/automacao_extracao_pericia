@@ -68,7 +68,7 @@ def gerar_decisoes_periciais(dados: dict) -> dict:
             for estorno in valores.get("estornos", [])
     })
 
-    dados = dados.values()
+    dados = dados[next(iter(dados))]
     capitalizacao = dados.get("capitalizacao", {})
 
     inadimplemento = dados.get("opcoes_inadimplento", []) or []
