@@ -28,6 +28,9 @@ class ContratoPDF:
 
         return paginas
 
+    def texto_paginas(self, paginas: int = 3) -> str:
+        return "\n".join(p.texto for p in self.paginas[:paginas])
+
     @property
     def nome_arquivo(self) -> str:
         return self.path.name
@@ -39,12 +42,3 @@ class ContratoPDF:
     @property
     def numero_paginas(self) -> int:
         return len(self.paginas)
-
-    def buscar_paginas_com(self, termo: str) -> list[PaginaPDF]:
-        termo = termo.lower().strip()
-
-        return [
-            pagina
-            for pagina in self.paginas
-            if termo in pagina.texto.lower()
-        ]

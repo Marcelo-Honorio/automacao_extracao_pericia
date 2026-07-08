@@ -5,7 +5,7 @@ import pericia.calculations as cal
 from indices.bcb.service import atualizar_series_por_tx_mercado
 from pericia.models import ParametrosContrato
 from pericia.rules import decidir_capitalizacao
-from pericia.oi_utils import salvar_parametros, carregar_parametros
+from pericia.oi_utils import salvar_parametros, obter_parametros_iniciais
 
 def read_table_from_file(file_path):
     try:
@@ -51,18 +51,19 @@ def process_df(df, stem, parent=None, out_root=None, pasta=None):
     parametros_path = out_root / "parametros_inputs" / f"{stem}.json"
 
     # Solicitar entrada manual
-    if parametros_path.exists():
-        parametros_salvos = carregar_parametros(parametros_path)
-        parametros_brutos = ui.create_input_with_options(
-            stem, 
-            parametros_iniciais=parametros_salvos,
-            parent=parent)
-        salvar_parametros(parametros_path, parametros_brutos)
-    else:
-        print("input de dados")
-        parametros_brutos = ui.create_input_with_options(stem, parent=parent, pasta=pasta)
-        salvar_parametros(parametros_path, parametros_brutos)
-        print("DEPOIS DA JANELA")
+    parametros_ini = obter_parametros_iniciais(
+        parametros_path=parametros_path,
+        pasta=pasta,
+    )
+
+    parametros_brutos = ui.create_input_with_options(
+        stem,
+        parametros_iniciais=parametros_ini,
+        parent=parent,
+        pasta=pasta,
+    )
+
+    salvar_parametros(parametros_path, parametros_brutos)
 
     parametros_obj = ParametrosContrato.from_dict(parametros_brutos)
     parametros_obj.validar()

@@ -89,7 +89,6 @@ def localizar_pasta(root, pasta_base: Path, titulo="Localizar pasta"):
 def valor_preenchido(valor):
     return valor not in (None, "", [], {})
 
-
 def mesclar_parametros(defaults=None, contrato=None, salvos=None):
     """
     Prioridade:
@@ -114,11 +113,11 @@ def mesclar_parametros(defaults=None, contrato=None, salvos=None):
     return resultado
 
 # Carregar os parametros do contrato ou já salvos
-def parametros_iniciais(parametros_path=None, pasta=None):
+def obter_parametros_iniciais(parametros_path=None, pasta=None):
     parametros_salvos = {}
     parametros_contrato = {}
 
-    if parametros_path.exists():
+    if parametros_path and parametros_path.exists():
         parametros_salvos = carregar_parametros(parametros_path)
 
     try:
@@ -134,9 +133,7 @@ def parametros_iniciais(parametros_path=None, pasta=None):
     except Exception as e:
         print(f"[CONTRATO] Erro ao extrair dados do contrato: {e}")
 
-    parametros_iniciais = mesclar_parametros(
+    return mesclar_parametros(
         contrato=parametros_contrato,
         salvos=parametros_salvos,
     )
-
-    return parametros_iniciais
