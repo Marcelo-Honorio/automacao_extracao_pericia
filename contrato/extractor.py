@@ -12,6 +12,7 @@ from contrato.normalizer import (
 from contrato.patterns import (
     PADROES_CONTRATO,
     PADROES_VALOR_LIBERADO,
+    PADROES_BLOCO_ENCARGOS,
     PADROES_JUROS_ANO,
     PADROES_JUROS_MES,
     PADRAO_DATA,
@@ -51,16 +52,11 @@ class ExtratorContrato:
         return self._buscar_primeiro(padroes, texto=texto)
 
     def extrair_bloco_encargos(self) -> str:
-        m = re.search(
-            r"ENCARGOS\s+FINANCEIROS\s*[-–—]?\s*(.+?)(?:CETCR|CUSTO\s+EFETIVO|TARIFA|INADIMPLEMENTO|FORMA\s+DE\s+PAGAMENTO)",
-            self.texto,
-            flags=re.I | re.S,
-        )
-
-        if m:
-            return m.group(1)
-
-        return self.texto
+        return self._buscar_regex(
+            PADROES_BLOCO_ENCARGOS,
+            paginas=None,
+            flags=re.I | re.S
+        ) or ""
 
     def extrair_instrumento(self):
         texto_inicio = self._texto_paginas(paginas=2)
@@ -109,10 +105,14 @@ class ExtratorContrato:
 
     def extrair_juros_ano(self):
         texto = self.extrair_bloco_encargos()
-        taxa = self._buscar_primeiro(PADROES_JUROS_ANO, texto)
 
-        if taxa is None:
-            taxa = self._buscar_primeiro(PADROES_JUROS_ANO, self.texto)
+        if not texto:
+            texto = self.texto
+
+        taxa = self._buscar_primeiro(
+            PADROES_JUROS_ANO,
+            texto
+        )
 
         return taxa_br_para_float(taxa)
 
@@ -159,44 +159,40 @@ class ExtratorContrato:
 
     def extrair_capitalizacao(self):
         texto = self.extrair_bloco_encargos()
+
+        if not texto:
+            texto = self.texto
+
         texto_lower = texto.lower()
 
         existe = any(
             termo in texto_lower
             for termo in [
+                "capitalizad",
                 "capitalização",
                 "capitalizacao",
-                "capitalizados",
-                "juros capitalizados",
-                "regime de capitalização",
-                "regime de capitalizacao",
             ]
         )
 
-        periodicidade = None
+        periodicidade = "Não informado"
 
-        if "capitalizados mensalmente" in texto_lower or "capitalização mensal" in texto_lower:
+        if re.search(r"capitalizad[oa]s?\s+mensalmente", texto_lower):
             periodicidade = "mensal"
-        elif "capitalizados diariamente" in texto_lower or "capitalização diária" in texto_lower:
+        elif re.search(r"capitalizad[oa]s?\s+diariamente", texto_lower):
             periodicidade = "diaria"
-        elif "capitalizados anualmente" in texto_lower or "capitalização anual" in texto_lower:
+        elif re.search(r"capitalizad[oa]s?\s+anualmente", texto_lower):
             periodicidade = "anual"
-        elif "capitalizados semestralmente" in texto_lower or "capitalização semestral" in texto_lower:
+        elif re.search(r"capitalizad[oa]s?\s+semestralmente", texto_lower):
             periodicidade = "semestral"
 
-        regime = None
+        regime = "Não informado" if existe else None
 
-        if "juros compostos" in texto_lower or "regime composto" in texto_lower:
-            regime = "composto"
-        elif "juros simples" in texto_lower or "regime simples" in texto_lower:
-            regime = "simples"
-        elif existe:
-            regime = "nao_informado"
+        duodecuplo = "Não informado"
 
         return {
             "existe_capitalizacao": existe,
             "periodicidade_capitalizacao": periodicidade,
-            "taxa_anual_supera_duodecuplo": None,
+            "taxa_anual_supera_duodecuplo": duodecuplo,
             "regime_capitalizacao": regime,
         }
 

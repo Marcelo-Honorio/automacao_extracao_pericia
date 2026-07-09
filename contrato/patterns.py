@@ -45,16 +45,28 @@ PADROES_VALOR_LIBERADO = [
 
 
 PADROES_JUROS_ANO = [
+    # mais comum em Cédulas Rurais
     r"taxa\s+efetiva\s+de\s+([0-9]{1,3}(?:[,.][0-9]+)?)\s*(?:\([^)]*\))?\s*pontos?\s+percentuais\s+ao\s+ano",
+    # variação
     r"juros\s+(?:à|a)\s+taxa\s+efetiva\s+de\s+([0-9]{1,3}(?:[,.][0-9]+)?)",
-    r"([0-9]{1,3}(?:[,.][0-9]+)?)\s*%\s*a\.?a\.?",
+    # apenas "... pontos percentuais ao ano"
+    r"([0-9]{1,3}(?:[,.][0-9]+)?)\s*(?:\([^)]*\))?\s*pontos?\s+percentuais\s+ao\s+ano",
+    # contratos mais modernos
+    r"([0-9]{1,3}(?:[,.][0-9]+)?)\s*%\s*a\.?\s*a\.?",
+    # taxa anual
+    r"taxa\s+anual\s+de\s+([0-9]{1,3}(?:[,.][0-9]+)?)",
 ]
 
 
 PADROES_JUROS_MES = [
-    r"([0-9]{1,3}(?:[,.][0-9]+)?)\s*%\s*a\.?m\.?",
+    r"([0-9]{1,3}(?:[,.][0-9]+)?)\s*(?:\([^)]*\))?\s*pontos?\s+percentuais\s+ao\s+m[êe]s",
+    r"([0-9]{1,3}(?:[,.][0-9]+)?)\s*%\s*a\.?\s*m\.?",
+    r"taxa\s+mensal\s+de\s+([0-9]{1,3}(?:[,.][0-9]+)?)",
 ]
 
+PADROES_BLOCO_ENCARGOS = [
+    r"ENCARGOS\s+FINANCEIROS\s*[-–—]?\s*(.+?)(?=CETCR|FORMA\s+DE\s+PAGAMENTO|GARANTIAS|INADIMPLEMENTO|VENCIMENTO|DISPOSIÇÕES|$)"
+]
 
 PADROES_DATA_CONTRATO = [
     r"\bA\s+(\d{1,2}\s+de\s+[a-zçãé]+\s+de\s+\d{4})\s+pagarei",

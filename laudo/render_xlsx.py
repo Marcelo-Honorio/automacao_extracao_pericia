@@ -1,4 +1,5 @@
 from openpyxl import load_workbook
+from openpyxl.styles import Protection
 from copy import copy
 from pathlib import Path
 import numpy as np
@@ -136,6 +137,39 @@ def copiar_formatacao(ws, n_linhas):
 
             if origem.number_format:
                 destino.number_format = origem.number_format
+# =========================
+# PROTEGER AS FORMULAS
+# =========================
+def proteger_formulas(ws, n_linhas):
+
+    primeira = START_ROW
+    ultima = START_ROW + n_linhas - 1
+
+    # Colunas que possuem fórmulas
+    colunas_formula = [
+        "I",  # SND
+        "J",  # SNA
+        "K",  # SNM
+        "L",  # Juros
+        "P",  # Débito recalculado (se virar fórmula)
+        "Q",  # Estorno (se virar fórmula)
+        "R",  # Saldo recalculado
+        "S",  # SND recalculado
+        "T",  # SNA recalculado
+        "U",  # SNM recalculado
+        "V",  # Juros recalculado
+    ]
+
+    for linha in range(primeira, ultima + 1):
+
+        # Primeira linha (liberação) não possui cálculo
+        historico = ws[f"B{linha}"].value
+
+        if historico == "trans_saldo":
+            continue
+
+        for coluna in colunas_formula:
+            ws[f"{coluna}{linha}"].protection = Protection(locked=True)
 
 # =========================
 # PREENCHER TABELA
@@ -150,11 +184,14 @@ def preencher_tabela(ws, df):
 
         r = START_ROW + i
 
+        # 1. Dados originais
         ws.cell(r, 1, row["Data"])
         ws.cell(r, 2, row["Historico"])
         ws.cell(r, 3, row["Debito"])
         ws.cell(r, 4, row["Credito"])
         ws.cell(r, 5, row["Saldo"])
+
+        # 2. Memória do cálculo original
         ws.cell(r, 7, row["dias"])
         ws.cell(r, 8, row["dias_acum"])
         ws.cell(r, 9, row["snd"])
@@ -163,6 +200,8 @@ def preencher_tabela(ws, df):
         ws.cell(r, 12, row["juros"])
         ws.cell(r, 13, row["tx_mensal"])
         ws.cell(r, 14, row["tx_mercado"]) ### corrigir p/ incluir tx de mercado
+        
+        # 3. Recálculo
         ws.cell(r, 15, row['historico_estorno'])
         ws.cell(r, 16, row["debito_recal"])
         ws.cell(r, 17, row["estorno_credito"])
@@ -171,6 +210,57 @@ def preencher_tabela(ws, df):
         ws.cell(r, 20, row["SNA"])
         ws.cell(r, 21, row["SNM"])
         ws.cell(r, 22, row["juros_recal"])
+
+# =========================
+# CRIAR ABA PARÂMETROS
+# =========================
+def criar_aba_parametros(wb, dados):
+    if "PARAMETROS" in wb.sheetnames:
+        ws = wb["PARAMETROS"]
+        ws.delete_rows(1, ws.max_row)
+    else:
+        ws = wb.create_sheet("PARAMETROS")
+
+    ws["A1"] = "Campo"
+    ws["B1"] = "Valor"
+
+    estornos = dados.get("estornos", [])
+    estornos_txt = frase_estornos(estornos).replace("Estorno da cobrança de ", "")
+
+    capitalizacao_valida = dados.get("decisao_capitalizacao", {}).get("capitalizacao_valida")
+
+    parametros = [
+        ("Contrato", dados.get("contrato", "")),
+        ("Taxa anual", f'{dados.get("juros_ano", 0):.2f}%'),
+        ("Taxa equivalente", dados.get("tx_equivalente", "")),
+        ("Critério da taxa", dados.get("taxa_utilizada", {}).get("criterio", "")),
+        ("Capitalização válida", "Sim" if capitalizacao_valida else "Não"),
+        ("Estornos aplicados", estornos_txt),
+    ]
+
+    for i, (campo, valor) in enumerate(parametros, start=2):
+        ws[f"A{i}"] = campo
+        ws[f"B{i}"] = valor
+
+# =========================
+# PROTEGER PLANILHA
+# =========================
+def proteger_planilha(ws):
+    # Por padrão, todas as células já ficam bloqueadas quando a planilha é protegida.
+
+    # Libera células de entrada/conferência, se quiser permitir edição manual
+    celulas_editaveis = [
+        "B3",  # valor liberado
+        "B4",  # IOF
+        "D4",  # taxa juros
+    ]
+
+    for celula in celulas_editaveis:
+        ws[celula].protection = Protection(locked=False)
+
+    # Protege a planilha
+    ws.protection.sheet = True
+    ws.protection.password = "1234"
 
 # =========================
 # ATUALIZAR FÓRMULAS DO RESUMO
@@ -218,6 +308,9 @@ def gerar_relatorio(df, dados, stem, out_dir):
 
     atualizar_formulas_resumo(ws, n_linhas)
 
+    criar_aba_parametros(wb, dados)
+    proteger_planilha(ws)
+   
     #preencher_resumo(ws, resumo)
     nome = dados["cliente"].upper()
     auto_n = dados["auto"]
