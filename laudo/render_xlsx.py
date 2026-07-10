@@ -140,36 +140,26 @@ def copiar_formatacao(ws, n_linhas):
 # =========================
 # PROTEGER AS FORMULAS
 # =========================
-def proteger_formulas(ws, n_linhas):
+def proteger_formulas(ws):
 
-    primeira = START_ROW
-    ultima = START_ROW + n_linhas - 1
-
-    # Colunas que possuem fórmulas
+    linha = START_ROW
     colunas_formula = [
-        "I",  # SND
-        "J",  # SNA
-        "K",  # SNM
-        "L",  # Juros
-        "P",  # Débito recalculado (se virar fórmula)
-        "Q",  # Estorno (se virar fórmula)
-        "R",  # Saldo recalculado
-        "S",  # SND recalculado
-        "T",  # SNA recalculado
-        "U",  # SNM recalculado
-        "V",  # Juros recalculado
+        "G",
+        "H",
+        "I",
+        "J",
+        "K",
+        "L",
+        "M",
+        "T",
+        "U",
+        "V",
     ]
 
-    for linha in range(primeira, ultima + 1):
-
-        # Primeira linha (liberação) não possui cálculo
-        historico = ws[f"B{linha}"].value
-
-        if historico == "trans_saldo":
-            continue
-
-        for coluna in colunas_formula:
-            ws[f"{coluna}{linha}"].protection = Protection(locked=True)
+    for coluna in colunas_formula:
+        ws[f"{coluna}{linha}"].protection = Protection(
+            locked=True
+        )
 
 # =========================
 # PREENCHER TABELA
@@ -191,14 +181,16 @@ def preencher_tabela(ws, df):
         ws.cell(r, 4, row["Credito"])
         ws.cell(r, 5, row["Saldo"])
 
-        # 2. Memória do cálculo original
-        ws.cell(r, 7, row["dias"])
-        ws.cell(r, 8, row["dias_acum"])
-        ws.cell(r, 9, row["snd"])
-        ws.cell(r, 10, row["sna"])
-        ws.cell(r, 11, row["snm"])
-        ws.cell(r, 12, row["juros"])
-        ws.cell(r, 13, row["tx_mensal"])
+        if i !=0: 
+            # 2. Memória do cálculo original (G:M)
+            ws.cell(r, 7, row["dias"])
+            ws.cell(r, 8, row["dias_acum"])
+            ws.cell(r, 9, row["snd"])
+            ws.cell(r, 10, row["sna"])
+            ws.cell(r, 11, row["snm"])
+            ws.cell(r, 12, row["juros"])
+            ws.cell(r, 13, row["tx_mensal"])
+
         ws.cell(r, 14, row["tx_mercado"]) ### corrigir p/ incluir tx de mercado
         
         # 3. Recálculo
@@ -207,9 +199,11 @@ def preencher_tabela(ws, df):
         ws.cell(r, 17, row["estorno_credito"])
         ws.cell(r, 18, row["saldo_recal"])
         ws.cell(r, 19, row["SND"])
-        ws.cell(r, 20, row["SNA"])
-        ws.cell(r, 21, row["SNM"])
-        ws.cell(r, 22, row["juros_recal"])
+
+        if i != 0:
+            ws.cell(r, 20, row["SNA"])
+            ws.cell(r, 21, row["SNM"])   
+            ws.cell(r, 22, row["juros_recal"])
 
 # =========================
 # CRIAR ABA PARÂMETROS
@@ -258,9 +252,13 @@ def proteger_planilha(ws):
     for celula in celulas_editaveis:
         ws[celula].protection = Protection(locked=False)
 
-    # Protege a planilha
+    # Ativa a proteção
     ws.protection.sheet = True
     ws.protection.password = "1234"
+
+    # Permite selecionar células bloqueadas e desbloqueadas
+    ws.protection.selectLockedCells = True
+    ws.protection.selectUnlockedCells = True
 
 # =========================
 # ATUALIZAR FÓRMULAS DO RESUMO
@@ -308,8 +306,11 @@ def gerar_relatorio(df, dados, stem, out_dir):
 
     atualizar_formulas_resumo(ws, n_linhas)
 
+    # Protege as células com fórmulas
+    proteger_formulas(ws)
+
     criar_aba_parametros(wb, dados)
-    proteger_planilha(ws)
+    #proteger_planilha(ws)
    
     #preencher_resumo(ws, resumo)
     nome = dados["cliente"].upper()

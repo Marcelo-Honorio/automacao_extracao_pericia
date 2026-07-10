@@ -191,7 +191,7 @@ def main():
     from laudo.builder import transformar_input_para_contexto
     from laudo.render_docx import gerar_laudo_docx
     from laudo.estrutura_laudo import gerar_decisoes_irregularidade
-    from pericia.oi_utils import localizar_pasta
+    #from pericia.oi_utils import localizar_pasta
     
     root = tk.Tk()
     root.withdraw()
