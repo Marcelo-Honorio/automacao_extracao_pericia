@@ -339,6 +339,66 @@ def gerar_flags_estornos(dados_dict:dict):
     
     return {item: item in lista_estorno for item in todos}
 
+def resumo_flags(dados: dict):
+    resumo = {}
+
+    resumo["juros_carencia_sem_datas_claras"] = {
+        "aplicavel": dados.get("juros_carencia_sem_datas_claras", False),
+    }
+
+    resumo["encadeamento_operacoes"] = {
+        "aplicavel": dados.get("encadeamento_operacoes", False),
+    }
+
+    resumo["cdi_indevida_com_encargo"] = {
+        "aplicavel": any([
+            dados.get("cdi_com_substituicao_indevida", False),
+            dados.get("cdi_como_encargo_remuneratorio", False),
+        ]),
+        "itens": {
+            "cdi_com_substituicao_indevida": dados.get("cdi_com_substituicao_indevida", False),
+            "cdi_como_encargo_remuneratorio": dados.get("cdi_como_encargo_remuneratorio", False),
+        },
+    }
+
+    resumo["capitalizacao_anual_sem_pactuacao"] = {
+        "aplicavel": dados.get("capitalizacao_anual_sem_pactuacao", False),
+    }
+
+    resumo["juros_remuneratorios_irregulares"] = {
+        "aplicavel": any([
+            dados.get("juros_superiores_12_aa_credito_rural", False),
+            dados.get("taxa_superior_media_mercado", False),
+            dados.get("juros_superiores_plano_safra", False),
+            dados.get("taxa_superior_contrato_originario", False),
+        ]),
+        "itens": {
+            "juros_superiores_12_aa_credito_rural": dados.get("juros_superiores_12_aa_credito_rural", False),
+            "taxa_superior_media_mercado": dados.get("taxa_superior_media_mercado", False),
+            "juros_superiores_plano_safra": dados.get("juros_superiores_plano_safra", False),
+            "taxa_superior_contrato_originario": dados.get("taxa_superior_contrato_originario", False),
+        },
+    }
+
+    resumo["capitalizacao_sem_pactuacao"] = {
+        "aplicavel": dados.get("capitalizacao_sem_pactuacao", False),
+    }
+
+    resumo["periodicidade_capitalizacao_rural"] = {
+        "aplicavel": dados.get("periodicidade_capitalizacao_rural", False),
+    }
+
+    resumo["cobranca_indevida_seguros_tarifa"] = {
+        "aplicavel": dados.get("cobranca_indevida_seguros_tarifa", False),
+    }
+
+    resumo["inadimplemento_ilegal_oneroso"] = {
+        "aplicavel": dados.get("inadimplemento_ilegal_oneroso", False),
+    }
+
+    return resumo
+
+
 def montar_sumario_dinamico(dados: dict) -> list[dict]:
     estrutura = montar_estrutura_laudo(dados)
 
@@ -372,10 +432,14 @@ def gerar_decisoes_irregularidade(dados_dict:dict):
     decisoes_irregularidades = gerar_decisoes_periciais(dados_dict)
     # Subdecisões
     subdecisoes_estornos = gerar_flags_estornos(dados_dict)
+    # Resumo
+    resumo_pericia = {}
+    resumo_pericia["resumo"] = resumo_flags(decisoes_irregularidades)
     # Concatenar as subdecisões quando a decisão principal se estiver ativa
     if decisoes_irregularidades.get("cobranca_indevida_seguros_tarifa"):
         decisoes_irregularidades = {
             **decisoes_irregularidades,
             **subdecisoes_estornos,
+            **resumo_pericia,
         }
     return decisoes_irregularidades

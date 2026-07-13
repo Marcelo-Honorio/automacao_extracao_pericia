@@ -153,7 +153,10 @@ def process_df(df, stem, parent=None, out_root=None, pasta=None):
     # Separando substantivos nos parametros
     #parametros["substantivo"] = parametros["agente"].split()[1].capitalize()
     ###########################################################################################
-    parametros.update(df[["SALDO", "saldo_recal"]].iloc[-1].to_dict())
+    parametros.update(df[["Saldo", "saldo_recal"]].iloc[-1].to_dict())
+    # Excesso de execução
+    parametros["valor_excesso"] = abs(parametros["Saldo"] - parametros["saldo_recal"])
+
     estorno_apurado = cal.estorno_resultado(df, estornos=parametros['estornos'])
 
     parametros["estorno_apurado"] = estorno_apurado

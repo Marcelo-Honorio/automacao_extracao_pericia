@@ -156,7 +156,9 @@ def transformar_input_para_contexto(dados_dict: dict, valores_por_arquivo):
     autor = None
     auto_n = None
     instrumento = None
-    
+    valores_iniciais = 0.0
+    valores_recalculado = 0.0
+
     for nome_arquivo, dados in dados_dict.items():
         #if substantivo is None:
         #    substantivo = dados.get("substantivo", "")    
@@ -210,6 +212,8 @@ def transformar_input_para_contexto(dados_dict: dict, valores_por_arquivo):
                 valores_apurados
             )
         }
+        valores_iniciais += dados.get("Saldo", 0)
+        valores_recalculado += dados.get("saldo_recal", 0)
 
         contratos.append(contrato_item)
 
@@ -234,6 +238,9 @@ def transformar_input_para_contexto(dados_dict: dict, valores_por_arquivo):
             },
         "operacao_tx_limite": operacoes_tx_limite or "",
         "estornos": estornos or "",
+        "valores_iniciais": f.fmt_moeda(valores_iniciais) or 0,
+        "valores_recalculado": f.fmt_moeda(valores_recalculado) or 0,
+        "valor_excesso": f.fmt_moeda(abs(valores_iniciais - valores_recalculado)),
         "contratos": contratos
     }
 
