@@ -120,6 +120,10 @@ def obter_parametros_iniciais(parametros_path=None, pasta=None):
     if parametros_path and parametros_path.exists():
         parametros_salvos = carregar_parametros(parametros_path)
 
+        return mesclar_parametros(
+            salvos=parametros_salvos,
+        )
+
     try:
         if pasta:
             contrato_pdf = localizar_contrato_pdf(pasta)
