@@ -2,6 +2,7 @@ import pandas as pd
 import re
 import calendar
 from indices.bcb import obter_taxa_por_data
+from datetime import datetime
 
 # função base de limpeza antes do cáculo
 def moeda_para_float(valor):
@@ -665,3 +666,14 @@ def decidir_taxa(tx_opcoes, taxa_contrato, taxas_mercado=None):
         })
 
     return resultados
+
+def data_para_mes_ano(data_str):
+    """
+    Converte '29/09/2025' para 'set/2025'.
+    """
+    meses = {
+        1: "janeiro", 2: "fevereiro", 3: "março", 4: "abril",
+        5: "maio", 6: "junho", 7: "julho", 8: "agosto",
+        9: "setembro", 10: "outubro", 11: "novembro", 12: "dezembro"
+        }
+    return f"{meses[data_str.month]}/{data_str.year}"

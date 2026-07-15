@@ -4,6 +4,19 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 import pandas as pd
 import re
+import sys
+
+def caminho_recurso(caminho_relativo: str) -> Path:
+    """
+    Retorna o caminho correto tanto no ambiente Python
+    quanto no programa compilado pelo PyInstaller.
+    """
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        pasta_base = Path(sys._MEIPASS)
+    else:
+        pasta_base = Path(__file__).resolve().parent
+
+    return pasta_base / caminho_relativo
 
 # função para restaurar o historico dos estornos que foram normalizados
 def restaurar_historico_original(df):
@@ -194,6 +207,16 @@ def main():
     #from pericia.oi_utils import localizar_pasta
     
     root = tk.Tk()
+
+    icone = caminho_recurso("assets/auto_pericia.ico")
+
+    try:
+        if icone.exists():
+            root.iconbitmap(default=str(icone))
+    except tk.TclError as erro:
+        print(f"Não foi possível carregar o ícone: {erro}")
+
+    root.title("AutoPericia")
     root.withdraw()
 
     try:

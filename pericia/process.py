@@ -157,6 +157,9 @@ def process_df(df, stem, parent=None, out_root=None, pasta=None):
     # Excesso de execução
     parametros["valor_excesso"] = abs(parametros["Saldo"] - parametros["saldo_recal"])
 
+    # Data de execução/cobrança
+    parametros["data_exec_cobra"] = cal.data_para_mes_ano(df.Data.iloc[-1])
+
     estorno_apurado = cal.estorno_resultado(df, estornos=parametros['estornos'])
 
     parametros["estorno_apurado"] = estorno_apurado
@@ -169,4 +172,3 @@ def process_df(df, stem, parent=None, out_root=None, pasta=None):
     df.loc[:, "dias_acum"] = df["dias_acum"].dt.days
     
     return df, parametros, estorno_apurado
-

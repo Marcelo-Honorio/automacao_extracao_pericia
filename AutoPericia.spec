@@ -12,7 +12,8 @@ hiddenimports += collect_submodules("jinja2")
 datas = [
     ("laudo/templates", "laudo/templates"),
     ("indices/dados/bcb", "indices/dados/bcb"),
-    ("extrator/regras/regras.yaml", "extrator"),
+    ("extrator/regras/regras.yaml", "extrator/regras"),
+    ("assets/auto_pericia.ico", "assets")
 ]
 
 a = Analysis(
@@ -51,12 +52,12 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon="assets/auto_pericia.ico",
 )
 
 coll = COLLECT(
     exe,
     a.binaries,
-    a.zipfiles,
     a.datas,
     strip=False,
     upx=True,

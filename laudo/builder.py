@@ -156,6 +156,7 @@ def transformar_input_para_contexto(dados_dict: dict, valores_por_arquivo):
     autor = None
     auto_n = None
     instrumento = None
+    data_exec_cobra = None
     valores_iniciais = 0.0
     valores_recalculado = 0.0
 
@@ -172,6 +173,8 @@ def transformar_input_para_contexto(dados_dict: dict, valores_por_arquivo):
             cliente = dados.get("cliente", "")
         if autor is None:
             autor = dados.get("autor", "")
+        if data_exec_cobra is None:
+            data_exec_cobra = dados.get("data_exec_cobra", "")
         #    continuidade = dados.get("agente_continuidade", "")
         valores_apurados = valores_por_arquivo.get(nome_arquivo, {})
         # Complemento juros no laudo
@@ -219,7 +222,7 @@ def transformar_input_para_contexto(dados_dict: dict, valores_por_arquivo):
 
     return {
         "auto": auto_n or "",
-        "autor": autor or "",
+        "autor": autor.upper() or "",
         "instrumento": instrumento or "",
         "substantivo": substantivo or "",
         "agente": agente or "",
@@ -241,6 +244,7 @@ def transformar_input_para_contexto(dados_dict: dict, valores_por_arquivo):
         "valores_iniciais": f.fmt_moeda(valores_iniciais) or 0,
         "valores_recalculado": f.fmt_moeda(valores_recalculado) or 0,
         "valor_excesso": f.fmt_moeda(abs(valores_iniciais - valores_recalculado)),
+        "data_exec_cobra": data_exec_cobra or "mmm/aaaa",
         "contratos": contratos
     }
 
